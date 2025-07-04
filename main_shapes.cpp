@@ -1,8 +1,8 @@
 
 //#define DEBUG_MEM
-#define DEBUG_GL	true
+#define DEBUG_GL	false
 #define PROFILE		false
-#define STATS			false
+#define STATS		false
 
 
 #include <time.h>
