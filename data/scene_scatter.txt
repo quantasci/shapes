@@ -1,0 +1,80 @@
+#----------------------------------------------- Materials
+
+[MATERIAL] Basic
+  input: texture = color_gray
+  input: shader = shade_mesh
+  param: displace_amt, <0, 0, 0>
+  param: diff_color, <0.4, 0.4, 0.4>
+  param: spec_color, <0.0, 0.0, 0.0>
+  param: env_color, <0.2, 0.2, 0.2>
+  param: refl_color, <0.0, 0.0, 0.0>
+  param: refl_width, 0.1
+  param: refl_bias, 0.01
+  param: light_width, 1.0
+  param: spec_power, 100
+
+[MATERIAL] Flat
+  input: texture = color_white
+  input: shader = shade_mesh
+  param: displace_amt, <0, 0, 0>
+  param: diff_color, <0.3, 0.5, 0.3>
+  param: spec_color, <0.2, 0.2, 0.2>
+  param: env_color, <0.6, 0.6, 0.6>
+  param: refl_color, <0.1, 0.1, 0.1>
+  param: refl_width, 0.1
+  param: refl_bias, 0.01
+  param: light_width, 1.0
+  param: spec_power, 100
+
+
+#----------------------------------------------- Objects
+
+[MESH] Plane 
+  input: mesh = model_square
+  input: material = Basic
+  xform: <0,-10,0>, <100,1,100>
+
+[MESH] Sphere
+  visible: true
+  input: mesh = model_sphere
+  input: material = Flat
+  param: size, <0.1,0.1,0.1> 
+  xform: <0,10,0>, <20,20,20>
+
+[SCATTER] Scatter    
+  input: source = model_cube
+  input: target = Sphere
+  input: material = Flat
+  param: size, <0.7,0.7,0.7>
+  xform: <0,0,0>, <1,1,1>
+
+[GLOBALS] Globals  
+  param: fps, 30
+  param: rate, 1.0
+  param: frames, <0, 100, 10>  
+  param: envclr, <1,1,1,1>    
+  input: envmap = env_sky  
+  param: max_samples, 48
+  param: backclr, <.1, .1, .15, 0>
+  param: ray_depths, <1,0,1,1>  
+  param: edit_res, <1400, 1400, 0>
+  param: record_res, <2048, 2048, 0> 
+  param: record, 0
+
+[CAMERA] Camera
+  visible: true
+  pos: <0.000,0.000,0.000>
+  param: fov, 40
+  param: nearfar, <1,1000,0>
+  param: distdolly, <28.7495,1,0>
+  param: angs, <-212.905,7.5704,0>
+  param: from, <50, 50, 80>
+  param: to, <0, 0, 0>
+  param: dof, <35,35,15>
+  param: key, 0, <0,10,0>, <0,10,12>, <0,0,0>, <0.18,35,8>
+
+[LIGHTS] Lightset
+  visible: true
+  pos: <0.000,0.000,0.000>
+  param: light, <604.5,1200,-629.667>, <0,0,0>, <0.01,0.01,0.01>, <1.7,1.7,1.7>, <0,0,0>  
+
