@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 2.8...3.5)
+cmake_minimum_required(VERSION 3.5)
 set (CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR} CACHE PATH "")
 
-# CUDA policy. Use older FindCUDA (not using: cmake >3.27 first-class support for .cu files)
-cmake_policy(SET CMP0146 OLD)
+if (POLICY CMD0146)
+  cmake_policy(SET CMP0146 OLD)
+endif()
 
-set(PROJNAME Shapes)
+set(PROJNAME shapes)
 Project(${PROJNAME})
 Message(STATUS "-------------------------------")
 Message(STATUS "Processing Project ${PROJNAME}:")
@@ -40,9 +41,10 @@ else()
     LIST( APPEND LIBMIN_SOURCE_FILES ${LIBMIN_SRC} ${LIBMIN_INC} )
     message ( STATUS "  ---> Using LIBMIN (static)")
   else()    
-    LIST( APPEND LIBRARIES_OPTIMIZED "${LIBMIN_LIB_DIR}/${LIBMIN_REL}")
-    LIST( APPEND LIBRARIES_DEBUG "${LIBMIN_LIB_DIR}/${LIBMIN_DEBUG}")	    
-    _EXPANDLIST( OUTPUT PACKAGE_DLLS SOURCE ${LIBMIN_LIB_DIR} FILES ${LIBMIN_DLLS} )
+    LIST( APPEND LIBRARIES_OPTIMIZED "${LIBMIN_REL}")
+    LIST( APPEND LIBRARIES_DEBUG "${LIBMIN_DEBUG}")
+    _EXPANDLIST( OUTPUT PACKAGE_DLLS SOURCE "" FILES ${LIBMIN_DLLS} )
+    message ( STATUS "  Getting Libmin from: ${LIBMIN_DLLS} ")
     message ( STATUS "  ---> Using LIBMIN")
   endif() 
 endif()
@@ -60,7 +62,12 @@ _REQUIRE_GL ()
 
 _REQUIRE_GLEW ()
 
-_REQUIRE_CUDA (TRUE "src/kernels")
+_REQUIRE_CUDA (FALSE "src/kernels")
+
+OPTION ( BUILD_JPG "Build with JPG" OFF )
+if (BUILD_JPG)
+  _REQUIRE_JPG ()
+endif()
 
 OPTION (BUILD_GLTF "Build with TinyGLTF" ON)
 if (BUILD_GLTF)  
@@ -76,9 +83,11 @@ OPTION (BUILD_USD "Build with Pixar USD" OFF)
 #-- add_definitions ( -DUSE_WIDGETS)
 
 #--- dpi awareness
-add_definitions ( -DUSE_DPI_AWARE)
-LIST( APPEND LIBRARIES_DEBUG "shcore.lib")	
-LIST( APPEND LIBRARIES_OPTIMIZED "shcore.lib")    
+if ( WIN32 )
+  add_definitions ( -DUSE_DPI_AWARE)
+  LIST( APPEND LIBRARIES_DEBUG "shcore.lib")	
+  LIST( APPEND LIBRARIES_OPTIMIZED "shcore.lib")    
+endif()
 
 #--- symbols in release mode
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi" CACHE STRING "" FORCE)
@@ -297,8 +306,7 @@ list( APPEND ALL_SOURCE_FILES ${PTX_SOURCES} )
 if ( NOT DEFINED WIN32 )
   find_library(NVTOOLSEXT nvToolsExt HINTS ${CUDA_TOOLKIT_ROOT_DIR}/lib64)
   find_library(CUDART cudart HINTS ${CUDA_TOOLKIT_ROOT_DIR}/lib64)
-  find_library(GVDBLIB gvdb HINTS ${GVDB_LIB_DIR} )
-  set(libdeps GL GLEW X11 cuda ${GVDBLIB} ${NVTOOLSEXT} ${CUDART})
+  set(libdeps GL GLEW X11 cuda ${NVTOOLSEXT} ${CUDART})
   LIST(APPEND LIBRARIES_OPTIMIZED ${libdeps})
   LIST(APPEND LIBRARIES_DEBUG ${libdeps})
 ENDIF()
@@ -311,8 +319,10 @@ add_definitions(-DSHADER_PATH="${SHADER_PATH}/")
 add_executable (${PROJNAME} ${ALL_SOURCE_FILES} ${CUDA_FILES} ${PTX_SOURCES} ${DATA_FILES} ${SHADER_FILES} ) 
 
 if (BUILD_CUDA)
-   target_link_libraries( ${PROJNAME} CUDA::cuda_driver)
+   target_link_libraries( ${PROJNAME} general CUDA::cuda_driver)
 endif()
+
+target_compile_options (${PROJNAME} PRIVATE -Wno-multichar)
 
 # set_target_properties ( ${PROJNAME} PROPERTIES OBJECT_DEPENDS ${DATA_FILES} )
 
@@ -358,7 +368,10 @@ _INSTALL_PTX ( FILES ${CUDA_PTX_PATHS} DESTINATION ${CMAKE_INSTALL_PREFIX} OUTPU
 _INSTALL ( FILES ${GLEW_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX} )                             # glew dll
 _INSTALL ( FILES ${SHADERS} DESTINATION "${CMAKE_INSTALL_PREFIX}/assets" )					 	 # shaders
 _INSTALL ( FILES ${PACKAGE_DLLS} DESTINATION ${CMAKE_INSTALL_PREFIX} )							 # DLLs
-install ( FILES $<TARGET_PDB_FILE:${PROJNAME}> DESTINATION ${CMAKE_INSTALL_PREFIX} OPTIONAL )	 # PDB
+
+if (WIN32)
+  install ( FILES $<TARGET_PDB_FILE:${PROJNAME}> DESTINATION ${CMAKE_INSTALL_PREFIX} OPTIONAL )	 # PDB
+endif()
 
 install ( FILES ${INSTALL_LIST} DESTINATION ${CMAKE_INSTALL_PREFIX} )							 # exe, pdb
 

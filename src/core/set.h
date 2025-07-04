@@ -4,11 +4,13 @@
 	#define DEF_SET
 
 	#ifdef DEBUG_HEAP
+            #ifdef _WIN32
 		#ifndef _CRTDBG_MAP_ALLOC  
 			#define _CRTDBG_MAP_ALLOC  
 		#endif	
 		#include <stdlib.h>  
 		#include <crtdbg.h> 
+            #endif
 	#else
 		#include <stdlib.h>  
 	#endif

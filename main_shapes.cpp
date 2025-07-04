@@ -1,6 +1,6 @@
 
 //#define DEBUG_MEM
-#define DEBUG_GL	false
+#define DEBUG_GL	true
 #define PROFILE		false
 #define STATS			false
 
@@ -160,8 +160,10 @@ bool Sample::init ()
 	if (m_SceneFile.empty()) {
 		dbgprintf("\nNO SCENE FILE FOUND\n\n");
 		dbgprintf ("Usage: shapes {scene_file}\n\n");
-		dbgprintf ("{scene_file}   Scene file to render, txt or gltf.\n");
-	  dbgprintf ("\n");		
+		dbgprintf ("{scene_file}   Scene file to render, txt or gltf.\n\n");
+      	        dbgprintf ("Data Path: %s  <-- searching for scenes here\n", DATA_PATH );
+ 	        dbgprintf ("Shader Path: %s\n", SHADER_PATH );
+   	        dbgprintf ("\n");		
 		exit(-1);
 	}
 
@@ -599,7 +601,7 @@ void Sample::motion (AppEnum button, int x, int y, int dx, int dy)
 		} else {
 			if ( shift ) MoveCamera('l', Vec3F(dx*0.2*DEGtoRAD, dy*0.2*DEGtoRAD, 0));
 			//if ( ctrl ) MoveCamera('d', Vec3F(dx, 0, dy) );
-		}		
+		}		 
 		break;	
 	case AppEnum::BUTTON_MIDDLE: 
 		MoveCamera ( 't', Vec3F(dx, -dy, 0 ) );
@@ -762,7 +764,7 @@ void Sample::startup ()
 		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_LEAK_CHECK_DF);
 	#endif
 
-	appStart ( "Shapes (c) 2010-2025", "Shapes (c) 2010-2025", w, h, 4, 2, 4, DEBUG_GL );
+	appStart ( "Shapes (c) 2010-2025", "Shapes (c) 2010-2025", w, h, 4, 2, 1, DEBUG_GL );
 
 	printf ("SHAPES (c) Quanta Sciences 2010-2025\n");
 	printf ("by Rama C. Hoetzlein, ramakarl.com\n");

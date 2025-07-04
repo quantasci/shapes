@@ -1,0 +1,6 @@
+{
+ "cmake.buildDirectory": "../build",
+ "launch": {
+    "defaultConfig": "Debug"
+ }
+}

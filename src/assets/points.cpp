@@ -1476,7 +1476,7 @@ void Points::SPH_ComputeForce ()
 	} else {
 
 		Vec3F force;
-		register float pterm, vterm, dterm;
+		float pterm, vterm, dterm;
 		int i, j;
 		float c, d;
 		float dx, dy, dz;

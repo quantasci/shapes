@@ -53,7 +53,7 @@
   param: max_samples, 48
   param: backclr, <.1, .1, .15, 0>
   param: ray_depths, <1,0,1,1>  
-  param: edit_res, <1400, 1400, 0>
+  param: edit_res, <1028, 1028, 0>
   param: record_res, <2048, 2048, 0> 
   param: record, 0
 

@@ -14,7 +14,19 @@
 //--------------------------
 
 #include <GL/glew.h>
-#include <GL/wglew.h>
+#ifdef _WIN32
+  #include <GL/wglew.h>
+#else
+  #include <GL/gl.h>
+#endif
+
+// #define DEBUG_CHECKS
+
+#ifdef DEBUG_CHECKS
+	#define CHECK_GL(a,b)		checkGL(a,b)
+#else
+	#define CHECK_GL(a,b)		// no op
+#endif
 
 #include "render.h"
 #include "render_gl.h"
@@ -36,14 +48,6 @@ using namespace glib;
 #include "volume.h"
 #include "object_list.h"		// has gAssets
 #include "timex.h"
-
-// #define DEBUG_CHECKS
-
-#ifdef DEBUG_CHECKS
-	#define CHECK_GL(a,b)		checkGL(a,b)
-#else
-	#define CHECK_GL(a,b)		// no op
-#endif
 
 int RenderGL::geomPos =		0;			// shader slots for geometry
 int RenderGL::geomClr =		1;
@@ -695,7 +699,9 @@ void RenderGL::EndRender ()
 	int out_tex = getOutputTex();		
 	glBindFramebuffer ( GL_FRAMEBUFFER, mFBO_W );
 	glFramebufferTexture ( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, out_tex, 0 );			// Write to final output
-	
+	CHECK_GL("bind final", mbDebug);
+
+	// renderTexGL ( res.x, res.y, mGLTex, 1 );
 	compositeTexGL ( 1.0, res.x, res.y, mGLTex, mVolTex, 1, 0 );						// Composite resolved GL buffer with volume (alpha blend)
 
 	CHECK_GL("composite", mbDebug);
