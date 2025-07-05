@@ -161,7 +161,7 @@ bool Sample::init ()
 		dbgprintf("\nNO SCENE FILE FOUND\n\n");
 		dbgprintf ("Usage: shapes {scene_file}\n\n");
 		dbgprintf ("{scene_file}   Scene file to render, txt or gltf.\n\n");
-      	        dbgprintf ("Data Path: %s  <-- searching for scenes here\n", DATA_PATH );
+      	        dbgprintf ("Data Path: %s  <-- searching for scenes here\n", ASSET_PATH );
  	        dbgprintf ("Shader Path: %s\n", SHADER_PATH );
    	        dbgprintf ("\n");		
 		exit(-1);
@@ -185,12 +185,12 @@ bool Sample::init ()
 	std::string PrimaryAssetsDir = "F:\\Master-Assets\\";
 
 	// Search paths
-	addSearchPath ( DATA_PATH );	
+	addSearchPath ( ASSET_PATH );	
 	addSearchPath ( SHADER_PATH );	
 	addSearchPath ( "." );	
 	
 	// Delay-Loaded Assets 
-	gAssets.AddAssetPath ( DATA_PATH );
+	gAssets.AddAssetPath ( ASSET_PATH );
 	gAssets.AddAssetPath ( SHADER_PATH );
 	
 	// GUI interface

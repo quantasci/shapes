@@ -242,23 +242,23 @@ endif()
 
 
 #####################################################################################
-# Data path
+# Asset path
 #
 # *NOTE* CMAKE_CURRENT_SOURCE_DIR is the original repository location of assets
 # 
-if ( NOT DEFINED DATA_PATH ) 
-  get_filename_component ( _data "${CMAKE_CURRENT_SOURCE_DIR}/data" REALPATH )
-  set ( DATA_PATH ${_data} CACHE PATH "Full path to /data" )  
+if ( NOT DEFINED ASSET_PATH ) 
+  get_filename_component ( _assets "${CMAKE_CURRENT_SOURCE_DIR}/assets" REALPATH )
+  set ( ASSET_PATH ${_assets} CACHE PATH "Full path to /assets" )  
 endif()
-message ( STATUS "Using DATA_PATH: ${DATA_PATH}")
-add_definitions ( -DDATA_PATH="${DATA_PATH}/" )
+message ( STATUS "Using ASSET_PATH: ${ASSET_PATH}")
+add_definitions ( -DASSET_PATH="${ASSET_PATH}/" )
 
-# Data Files - all files in DATA_PATH except for .obj
-file( GLOB _data_files "${DATA_PATH}/*.*" )
-set(DATA_FILES "")
-foreach(file ${_data_files})
+# Data Files - all files in ASSET_PATH except for .obj
+file( GLOB _asset_files "${ASSET_PATH}/*.*" )
+set(ASSET_FILES "")
+foreach(file ${_asset_files})
     if(NOT file MATCHES "\\.obj$")
-        list(APPEND DATA_FILES "${file}")
+        list(APPEND ASSET_FILES "${file}")
     endif()
 endforeach()
 
@@ -275,12 +275,12 @@ file( GLOB SHADER_FILES "${SHADER_PATH}/*.*" )
 file(GLOB MAIN_FILES *.cpp *.c *.h )
 file(GLOB CORE_FILES src/core/*.cpp src/core/*.c src/core/*.h)
 file(GLOB RENDER_FILES src/render/*.cpp src/render/*.h)
-file(GLOB ASSET_FILES src/assets/*.cpp src/assets/*.h)
+file(GLOB PRIM_FILES src/prims/*.cpp src/prims/*.h)
 file(GLOB BEHAVIOR_FILES src/behaviors/*.cpp src/behaviors/*.h)
 
 include_directories ( src/core )
 include_directories ( src/kernels )
-include_directories ( src/assets )
+include_directories ( src/prims )
 include_directories ( src/behaviors )
 include_directories ( src/render )
 
@@ -290,7 +290,7 @@ unset ( ALL_SOURCE_FILES )
 list( APPEND ALL_SOURCE_FILES ${MAIN_FILES} )
 list( APPEND ALL_SOURCE_FILES ${CORE_FILES} )
 list( APPEND ALL_SOURCE_FILES ${RENDER_FILES} )
-list( APPEND ALL_SOURCE_FILES ${ASSET_FILES} )
+list( APPEND ALL_SOURCE_FILES ${PRIM_FILES} )
 list( APPEND ALL_SOURCE_FILES ${BEHAVIOR_FILES} )
 
 #-- generic codes
@@ -316,7 +316,7 @@ add_definitions(-DGVDB_IMPORTS )
 add_definitions(-DASSET_PATH="${ASSET_PATH}/")
 add_definitions(-DSHADER_PATH="${SHADER_PATH}/")
 
-add_executable (${PROJNAME} ${ALL_SOURCE_FILES} ${CUDA_FILES} ${PTX_SOURCES} ${DATA_FILES} ${SHADER_FILES} ) 
+add_executable (${PROJNAME} ${ALL_SOURCE_FILES} ${CUDA_FILES} ${PTX_SOURCES} ${PRIM_FILES} ${SHADER_FILES} ) 
 
 if (BUILD_CUDA)
    target_link_libraries( ${PROJNAME} general CUDA::cuda_driver)
@@ -338,12 +338,12 @@ _LINK ( PROJECT ${PROJNAME} OPT ${LIBRARIES_OPTIMIZED} DEBUG ${LIBRARIES_DEBUG} 
 # Windows specific
 #
 _MSVC_PROPERTIES()
-source_group(Data FILES ${DATA_FILES})
+source_group(Assets FILES ${ASSET_FILES})
 source_group(Core FILES ${CORE_FILES})
 source_group(CUDA FILES ${CUDA_FILES})
 source_group(Render FILES ${RENDER_FILES})
 source_group(Behaviors FILES ${BEHAVIOR_FILES})
-source_group(Assets FILES ${ASSET_FILES})
+source_group(Primitives FILES ${PRIM_FILES})
 source_group(Shaders FILES ${SHADER_FILES})
 source_group(Source FILES ${MAIN_FILES} ${PACKAGE_SOURCE_FILES} ${COMMON_SOURCE_FILES})
 
