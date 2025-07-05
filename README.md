@@ -48,14 +48,14 @@ Pre-requisites:
 
 Install by cloning and building Libmin, then cloning and building Shapes.
 Steps to Install:
-> mkdir codes
-> git clone https://github.com/quantasci/libmin
-> cd libmin
-> ./build.sh
-> cd ..
-> git clone https://github.com/quantasci/shapes
-> cd shapes
-> ./build.sh
+> mkdir codes<br>
+> git clone https://github.com/quantasci/libmin<br>
+> cd libmin<br>
+> ./build.sh<br>
+> cd ..<br>
+> git clone https://github.com/quantasci/shapes<br>
+> cd shapes<br>
+> ./build.sh<br>
 
 
 
