@@ -322,9 +322,8 @@ if (BUILD_CUDA)
    target_link_libraries( ${PROJNAME} general CUDA::cuda_driver)
 endif()
 
-target_compile_options (${PROJNAME} PRIVATE -Wno-multichar)
+# target_compile_options (${PROJNAME} PRIVATE -Wno-multichar)
 
-# set_target_properties ( ${PROJNAME} PROPERTIES OBJECT_DEPENDS ${DATA_FILES} )
 
 #--- debug and release exe
 set ( CMAKE_DEBUG_POSTFIX "d" CACHE STRING "" )
