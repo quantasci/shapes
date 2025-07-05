@@ -59,6 +59,11 @@ Steps to Install:
 > cd shapes<br>
 > ./build.sh<br>
 
+Typical installation expects that the libmin and shapes repos are sibling folders. A separate folder for /build will be created so that 
+the repository trees can remain clean for code modifications. This is the recommended folder structure. 
+
+
+
 
 
 
