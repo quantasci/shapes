@@ -32,7 +32,7 @@ Features of the Shapes rendering engine include:
 * Geospatial Data, LiDAR and DEM (pro version)
 
 ## Platforms & System Requirements
-Shapes was designed to be very lightweight and minimal. **The default configuration only requires OpenGL and Libmin library **. 
+Shapes was designed to be very lightweight and minimal. **The default configuration only requires OpenGL and Libmin library**. 
 Build flags enable support for OptiX 6.5 for pure raytracing, and NVIDIA CUDA Toolkit for particle system acceleration.
 
 Platforms:
