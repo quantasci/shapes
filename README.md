@@ -65,6 +65,15 @@ The last command will run the scene_basic.txt example in a window.<br>
 Typical installation expects that the libmin and shapes repos are sibling folders. A separate folder for /build will be created so that 
 the repository trees can remain clean for code modifications. This is the recommended folder structure. 
 
+## Background
+
+Shapes is based on an earlier renderer, Luna (2010), which was part of my Ph.D. dissertation on real-time procedural modeling 
+in Media Arts & Technology (UC Santa Barbara). That early renderer allowed for each behavior node to output a full hierarchical scene graph; 
+however, this introduced complexity and significant overhead. Around 2020, the Shapes Engine was redesigned around the notion of a _shape_, 
+a lightweight, transformed instance, which could be efficiently generated, animated, state sorted and culled. This was designed to match
+the command-based architecture of zero overhead engines (such as Vulkan, Metal, DX12) although as of 2025 only OpenGL ES3 is implemented. 
+
+
 
 
 
