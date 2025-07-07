@@ -58,6 +58,9 @@ Steps to Install:
 > git clone https://github.com/quantasci/shapes<br>
 > cd shapes<br>
 > ./build.sh<br>
+>
+> ./run.sh
+The last command will run the scene_basic.txt example in a window.
 
 Typical installation expects that the libmin and shapes repos are sibling folders. A separate folder for /build will be created so that 
 the repository trees can remain clean for code modifications. This is the recommended folder structure. 
