@@ -48,7 +48,7 @@ Pre-requisites:
 
 ## Installation
 
-Install by cloning and building Libmin, then cloning and building Shapes.
+Install by cloning and building Libmin, then cloning and building Shapes.<br>
 Steps to Install:
 > mkdir codes<br>
 > git clone https://github.com/quantasci/libmin<br>
@@ -60,6 +60,7 @@ Steps to Install:
 > ./build.sh<br>
 >
 > ./run.sh<br>
+<br>
 The last command will run the scene_basic.txt example in a window.
 
 Typical installation expects that the libmin and shapes repos are sibling folders. A separate folder for /build will be created so that 
