@@ -59,7 +59,7 @@ Steps to Install:
 > cd shapes<br>
 > ./build.sh<br>
 >
-> ./run.sh
+> ./run.sh<br>
 The last command will run the scene_basic.txt example in a window.
 
 Typical installation expects that the libmin and shapes repos are sibling folders. A separate folder for /build will be created so that 
