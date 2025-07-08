@@ -75,7 +75,7 @@ Several simple samples are provided in the /shapes/assets folder:
 <br>
 To run, use:<br>
 > shapes {scene_file}<br>
-
+<br>
 Shapes uses the following mouse/keyboard input when run interactively:<br>
 * Alt+Left Mouse - Orbit camera<br>
 * Alt+Shift+Left Mouse - Pan  camera<br>
