@@ -87,18 +87,20 @@ To run, use:<br>
 > shapes {scene_file}
 ```
 <br>
-Shapes uses the following mouse/keyboard input when run interactively:<br>
-* Alt+Left Mouse - Orbit camera<br>
-* Alt+Shift+Left Mouse - Pan camera<br>
-* Middle Mouse - Pan camera<br>
-* Middle Mouse Wheel - Zoom in/out<br>
-* Right Mouse - Flying navigation, Change heading<br>
-* WSADZQ keys - Flying navigation, W=fwd, S=back, A/D=strafe, Z/Q=raise lower<br>
-* Shift+Left Mouse - Move primary light<br>
-* '/' - Record button. Save single or multiple frames (if animating)<br>
-* 'r' - Reset scene<br>
-* ' ' (spacebar) - Play button. Pause/run animation<br>
+Shapes uses the following mouse/keyboard input when run interactively:
+<ul>
+<li>Alt+Left Mouse - Orbit camera</li>
+<li>Alt+Shift+Left Mouse - Pan camera<</li>
+<li>Middle Mouse - Pan camera</li>
+<li>Middle Mouse Wheel - Zoom in/out</li>
+<li>Right Mouse - Flying navigation, Change heading</li>
+<li>WSADZQ keys - Flying navigation, W=fwd, S=back, A/D=strafe, Z/Q=raise lower</li>
+<li>Shift+Left Mouse - Move primary light</li>
+<li>'/' - Record button. Save single or multiple frames (if animating)</li>
+<li>'r' - Reset scene</li>
+<li>' ' (spacebar) - Play button. Pause/run animation</li>
 * Ctrl+S - Save scene<br>
+</ul>
 The mouse inputs are designed to match Blender in 3-button mode.
 
 ## Background
