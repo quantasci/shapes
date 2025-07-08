@@ -72,8 +72,8 @@ Several simple samples are provided in the /shapes/assets folder:
 1. scene_simple.txt - Simple cube & sphere with environment lighting<br>
 2. scene_bump.txt - Bump mapping, with various material properties<br>
 3. scene_displace.txt - Displacement mapping for real surface details (CPU demo).<br>
-4. scene_scatter - Procedural scattering of one mesh across another.<br>
-5. scene_psys - Particle system /w shadows (CPU demo). Press space bar to play.<br>
+4. scene_scatter.txt - Procedural scattering of one mesh across another.<br>
+5. scene_psys.txt - Particle system /w shadows (CPU demo). Press space bar to play.<br>
 To run, use:<br>
 ```
 > shapes {scene_file}
