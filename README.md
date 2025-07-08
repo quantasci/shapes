@@ -90,7 +90,7 @@ To run, use:<br>
 Shapes uses the following mouse/keyboard input when run interactively:
 <ul>
 <li>Alt+Left Mouse - Orbit camera</li>
-<li>Alt+Shift+Left Mouse - Pan camera<</li>
+<li>Alt+Shift+Left Mouse - Pan camera</li>
 <li>Middle Mouse - Pan camera</li>
 <li>Middle Mouse Wheel - Zoom in/out</li>
 <li>Right Mouse - Flying navigation, Change heading</li>
@@ -99,7 +99,7 @@ Shapes uses the following mouse/keyboard input when run interactively:
 <li>'/' - Record button. Save single or multiple frames (if animating)</li>
 <li>'r' - Reset scene</li>
 <li>' ' (spacebar) - Play button. Pause/run animation</li>
-* Ctrl+S - Save scene<br>
+<li>Ctrl+S - Save scene</li>
 </ul>
 The mouse inputs are designed to match Blender in 3-button mode.
 
