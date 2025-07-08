@@ -74,10 +74,10 @@ Several simple samples are provided in the /shapes/assets folder:
 5. scene_psys - Particle system /w shadows (CPU demo). Press space bar to play.<br>
 
 Shapes uses the following mouse/keyboard input when run interactively:<br>
-* Alt+Left Mouse - Orbit<br
-* Alt+Shift+Left Mouse - Pan <br>
-* Middle Mouse - Pan<br>
-* Middle Mouse Wheel - Zoom In/Out<br>
+* Alt+Left Mouse - Orbit camera<br>
+* Alt+Shift+Left Mouse - Pan  camera<br>
+* Middle Mouse - Pan camera<br>
+* Middle Mouse Wheel - Zoom in/out<br>
 * Right Mouse - Flying navigation, Change heading<br>
 * WSADZQ keys - Flying navigation, W=fwd, S=back, A/D=strafe, Z/Q=raise lower<br>
 * Shift+Left Mouse - Move primary light <br>
