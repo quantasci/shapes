@@ -66,6 +66,14 @@ The last command will run the scene_basic.txt example in a window.<br>
 
 Typical installation expects that the libmin and shapes repos are sibling folders. A separate folder for /build will be created so that 
 the repository trees can remain clean for code modifications. This is the recommended folder structure. 
+```
+/codes
+  |___ /libmin        Libmin repository
+  |___ /shapes        Shapes repository
+  |___ /build         
+        |___/libmin   Libmin build products and libmin.so library
+        |___/shapes   Shapes build products and binary
+```
 
 ## Running 
 Several simple samples are provided in the /shapes/assets folder:
