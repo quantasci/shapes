@@ -88,17 +88,17 @@ To run, use:<br>
 ```
 <br>
 Shapes uses the following mouse/keyboard input when run interactively:<br>
-* Alt+Left Mouse - Orbit camera
-* Alt+Shift+Left Mouse - Pan camera
-* Middle Mouse - Pan camera
-* Middle Mouse Wheel - Zoom in/out
-* Right Mouse - Flying navigation, Change heading
-* WSADZQ keys - Flying navigation, W=fwd, S=back, A/D=strafe, Z/Q=raise lower
-* Shift+Left Mouse - Move primary light
-* '/' - Record button. Save single or multiple frames (if animating)
-* 'r' - Reset scene
-* ' ' (spacebar) - Play button. Pause/run animation
-* Ctrl+S - Save scene
+* Alt+Left Mouse - Orbit camera<br>
+* Alt+Shift+Left Mouse - Pan camera<br>
+* Middle Mouse - Pan camera<br>
+* Middle Mouse Wheel - Zoom in/out<br>
+* Right Mouse - Flying navigation, Change heading<br>
+* WSADZQ keys - Flying navigation, W=fwd, S=back, A/D=strafe, Z/Q=raise lower<br>
+* Shift+Left Mouse - Move primary light<br>
+* '/' - Record button. Save single or multiple frames (if animating)<br>
+* 'r' - Reset scene<br>
+* ' ' (spacebar) - Play button. Pause/run animation<br>
+* Ctrl+S - Save scene<br>
 The mouse inputs are designed to match Blender in 3-button mode.
 
 ## Background
