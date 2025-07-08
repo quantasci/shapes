@@ -81,13 +81,8 @@ Shapes uses the following mouse/keyboard input when run interactively:<br>
 * Right Mouse - Flying navigation, Change heading<br>
 * WSADZQ keys - Flying navigation, W=fwd, S=back, A/D=strafe, Z/Q=raise lower<br>
 * Shift+Left Mouse - Move primary light <br>
-* `,1,2,3,4,5 - Sketch modes. `=shapes, 1=normals, 2=object sketch, 3=states, 4=wireframe, 5=picking<br>
-* 'm' key - Show stats<br>
-* 'i' key - Show info<br>
 * '/' - Record button. Save single or multiple frames (if animating)<br>
 * 'r' - Reset scene<br>
-* 'c' - Camera mode to fly<br>
-* 'o' - Cmaera mode to orbit<br>
 * ' ' (spacebar) - Play button. Pause/run animation<br>
 * Ctrl+S - Save scene<br>
 The mouse inputs are designed to match Blender in 3-button mode.
