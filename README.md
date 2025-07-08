@@ -50,16 +50,18 @@ Pre-requisites:
 
 Install by cloning and building Libmin, then cloning and building Shapes.<br>
 Steps to Install:
-> mkdir codes<br>
-> git clone https://github.com/quantasci/libmin<br>
-> cd libmin<br>
-> ./build.sh<br>
-> cd ..<br>
-> git clone https://github.com/quantasci/shapes<br>
-> cd shapes<br>
-> ./build.sh<br>
+```
+> mkdir codes
+> git clone https://github.com/quantasci/libmin
+> cd libmin
+> ./build.sh
+> cd ..
+> git clone https://github.com/quantasci/shapes
+> cd shapes
+> ./build.sh
 >
-> ./run.sh<br>
+> ./run.sh
+```
 The last command will run the scene_basic.txt example in a window.<br>
 
 Typical installation expects that the libmin and shapes repos are sibling folders. A separate folder for /build will be created so that 
@@ -74,7 +76,7 @@ Several simple samples are provided in the /shapes/assets folder:
 5. scene_psys - Particle system /w shadows (CPU demo). Press space bar to play.<br>
 To run, use:<br>
 ```
-> shapes {scene_file}<br>
+> shapes {scene_file}
 ```
 <br>
 Shapes uses the following mouse/keyboard input when run interactively:<br>
