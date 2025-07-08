@@ -65,6 +65,33 @@ The last command will run the scene_basic.txt example in a window.<br>
 Typical installation expects that the libmin and shapes repos are sibling folders. A separate folder for /build will be created so that 
 the repository trees can remain clean for code modifications. This is the recommended folder structure. 
 
+## Running 
+Several simple samples are provided in the /shapes/assets folder:
+1. scene_simple.txt - Simple cube & sphere with environment lighting<br>
+2. scene_bump.txt - Bump mapping, with various material properties<br>
+3. scene_displace.txt - Displacement mapping for real surface details (CPU demo).<br>
+4. scene_scatter - Procedural scattering of one mesh across another.<br>
+5. scene_psys - Particle system /w shadows (CPU demo). Press space bar to play.<br>
+
+Shapes uses the following mouse/keyboard input when run interactively:<br>
+* Alt+Left Mouse - Orbit<br
+* Alt+Shift+Left Mouse - Pan <br>
+* Middle Mouse - Pan<br>
+* Middle Mouse Wheel - Zoom In/Out<br>
+* Right Mouse - Flying navigation, Change heading<br>
+* WSADZQ keys - Flying navigation, W=fwd, S=back, A/D=strafe, Z/Q=raise lower<br>
+* Shift+Left Mouse - Move primary light <br>
+* `,1,2,3,4,5 - Sketch modes. `=shapes, 1=normals, 2=object sketch, 3=states, 4=wireframe, 5=picking<br>
+* 'm' key - Show stats<br>
+* 'i' key - Show info<br>
+* '/' - Record button. Save single or multiple frames (if animating)<br>
+* 'r' - Reset scene<br>
+* 'c' - Camera mode to fly<br>
+* 'o' - Cmaera mode to orbit<br>
+* ' ' (spacebar) - Play button. Pause/run animation<br>
+* Ctrl+S - Save scene<br>
+The mouse inputs are designed to match Blender in 3-button mode.
+
 ## Background
 
 Shapes is based on an earlier renderer, Luna (2010), which was part of my Ph.D. dissertation on real-time procedural modeling 
