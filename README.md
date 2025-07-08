@@ -72,9 +72,10 @@ Several simple samples are provided in the /shapes/assets folder:
 3. scene_displace.txt - Displacement mapping for real surface details (CPU demo).<br>
 4. scene_scatter - Procedural scattering of one mesh across another.<br>
 5. scene_psys - Particle system /w shadows (CPU demo). Press space bar to play.<br>
-<br>
 To run, use:<br>
+```
 > shapes {scene_file}<br>
+```
 <br>
 Shapes uses the following mouse/keyboard input when run interactively:<br>
 * Alt+Left Mouse - Orbit camera<br>
