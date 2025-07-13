@@ -77,9 +77,9 @@ int RenderGL::instTexSub =	10;
 int RenderGL::instXform =	12;
 //----------- NOTE: MAXIMUM 16 attribute slots (xform consumes 4), OpenGL 3.3 spec
 
+//#define PTR_OFFSET(offset)	((void*) reinterpret_cast<void*>(static_cast<uintptr_t>(offset)))
 
-#define PTR_OFFSET(offset) reinterpret_cast<void*>(static_cast<uintptr_t>(offset))
-
+#define PTR_OFFSET(offset)		(GLvoid*) (offset)
 
 
 RenderGL::RenderGL ()
@@ -380,7 +380,8 @@ void RenderGL::StartRender ()
 	//glFramebufferTexture ( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, mGLTex, 0 );	// attach to intermediate GL output
 	glClear ( GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT );
 
-	glClearColor ( 0.1, 0.1, 0.1, 1);			// clear color
+  // TODO - set background color from Global object
+	glClearColor ( 0.8, 0.1, 0.1, 1);			// clear color
 
 	glEnable (GL_BLEND);	
 	glBlendFunc (GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);	
@@ -699,9 +700,9 @@ void RenderGL::EndRender ()
 	int out_tex = getOutputTex();		
 	glBindFramebuffer ( GL_FRAMEBUFFER, mFBO_W );
 	glFramebufferTexture ( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, out_tex, 0 );			// Write to final output
-	CHECK_GL("bind final", mbDebug);
 
-	// renderTexGL ( res.x, res.y, mGLTex, 1 );
+
+
 	compositeTexGL ( 1.0, res.x, res.y, mGLTex, mVolTex, 1, 0 );						// Composite resolved GL buffer with volume (alpha blend)
 
 	CHECK_GL("composite", mbDebug);
@@ -1616,6 +1617,7 @@ void RenderGL::UpdateMaterials ()
 
 	}
 }
+
 
 
 bool RenderGL::CreateTexture ( Object* obj, std::string& msg)

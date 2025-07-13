@@ -92,7 +92,7 @@ void Globals::Generate(int x, int y)
 		s->meshids.w = -1;
 		s->ids = getIDS(0, 0, 0);
 		s->type = S_MESH;
-		s->scale = Vec3F(0,0,0);		// shape transforms are not used by env shader
+		s->scale = Vec3F(1, 1, 1);		// shape transforms are not used by env shader
 
 		// use object transform instead
 		SetTransform( Vec3F(0,0,0), Vec3F(1,1,1) );

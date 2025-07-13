@@ -63,9 +63,9 @@ void main()
 
 	vworldpos = instXform * vec4(inPos, 1);	
 	vviewpos = viewMatrix * vworldpos;
-  vnormal = normalize ( getInvTranspose ( instXform ) * inNorm );
+	vnormal = normalize ( getInvTranspose ( instXform ) * inNorm );
 
-  vtexcoord = vec3 ( inTexCoord* instTexSub.zw + instTexSub.xy, gl_InstanceID );
+	vtexcoord = vec3 ( inTexCoord* instTexSub.zw + instTexSub.xy, gl_InstanceID );
 	vmatids = ivec4 ( instMatIDS );
 	vclr = CLRtoVEC(inClr) * CLRtoVEC( instClr );
 

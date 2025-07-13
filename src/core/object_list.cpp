@@ -290,6 +290,7 @@ bool ObjectList::AddObjectFromFile ( objType otype, std::string name, std::strin
 		if (fname.find("env_sky_grey") != std::string::npos)
 			bool stop=true;
 
+    // images & meshes loaded here via libmin
 		obj->mLoaded = obj->Load ( fname );		
 	}
 		

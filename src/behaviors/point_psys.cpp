@@ -37,7 +37,6 @@ void PointPSys::Define (int x, int y)
 	mTimeRange = Vec3F(0, 10000, 0);
 }
 
-
 void PointPSys::Generate (int x, int y)
 {
 	CreateOutput ( 'Apnt' );

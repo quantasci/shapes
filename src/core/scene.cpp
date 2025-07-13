@@ -918,6 +918,7 @@ bool Scene::LoadScene ( std::string fname, int w, int h )
 				if (args.size() >= 3 ) {
 					r = strToVec3(args[2], ';');
 				}
+        //dbgprintf ( "xform: p<%f,%f,%f>  r<%f,%f,%f>  s<%f,%f,%f>\n", p.x,p.y,p.z,r.x,r.y,r.z,s.x,s.y,s.z);
 				Quaternion q;
 				q.fromEuler ( r );
 				obj->SetTransform ( p, s, r );

@@ -334,6 +334,8 @@ void RenderBase::SortShapes ( Shapes* shapes, Matrix4F& shapes_xform )
 		xform = out_xforms + (mSG[bin].offset + ndx);
 		xform->Multiply (shapes_xform, src->getXform() );			// shape transform * object transform
 
+    //xform->Print();
+
 		mID++;		// traversal order ID
 	}
 }

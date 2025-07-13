@@ -2,7 +2,7 @@
 //#define DEBUG_MEM
 #define DEBUG_GL	false
 #define PROFILE		false
-#define STATS		false
+#define STATS			false
 
 
 #include <time.h>
@@ -183,6 +183,7 @@ bool Sample::init ()
 
 	// Primary assets path
 	std::string PrimaryAssetsDir = "F:\\Master-Assets\\";
+
 
 	// Search paths
 	addSearchPath ( ASSET_PATH );	
@@ -419,11 +420,11 @@ void Sample::display ()
 	clearGL();
 	mRenderMgr.Render (w, h, m_rendergl_pick);
 
-	if ( mRenderMgr.getCurrentRenderer()==0) {								// Render GL		
-		renderTexGL ( w, h, m_rendergl_tex, 1 );		// invert opengl fbo output
+	if ( mRenderMgr.getCurrentRenderer()==0) {						// Render GL		
+		renderTexGL ( w, h, m_rendergl_tex, 1 );						// invert opengl fbo output
 		if (mRenderMgr.getOptGL(OPT_SKETCH_PICK)) renderTexGL ( w/2, h/2, m_rendergl_pick, 1 );		// debug - picking buffer
 	} else {
-		glBindFramebuffer ( GL_FRAMEBUFFER, 0 );		// Render OptiX
+		glBindFramebuffer ( GL_FRAMEBUFFER, 0 );						// Render OptiX
 		renderTexGL ( w, h, m_renderoptix_tex, 0 );
 	}
 

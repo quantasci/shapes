@@ -86,7 +86,7 @@ void main ()
 	
 	vec4 texclr = texture( tex[ int(envMap.x) ], tc );
 
-	// outColor = vec4( .2, .22, .2, 1 );
+	//outColor = vec4( .8, .1, .8, 1 );
 	outColor = vec4( texclr.xyz, 1.0 );	
 }
 

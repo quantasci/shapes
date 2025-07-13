@@ -20,6 +20,7 @@
 #include "gxlib.h"
 using namespace glib;
 
+
 #include "scene.h"
 
 RenderMgr::RenderMgr ()

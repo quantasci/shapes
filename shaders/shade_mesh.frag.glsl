@@ -273,6 +273,6 @@ void main ()
 		}	
 		clr += 1.0 * envClr.xyz * mat[m].envclr.xyz * eclr / float(N);
 	}*/
-
+	
 	outColor = vec4(clr, 1);
 }
