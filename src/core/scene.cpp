@@ -647,16 +647,22 @@ void Scene::CreateSceneDefaults ()
 
 	Matrix4F getGLTFLocalTransform (const tinygltf::Node& node) 
 	{
-		// Construct from TRS (Translation, Rotation, Scale)
-		Vec3F pos (0,0,0);		
-		Vec3F scal (1,1,1);
-		Quaternion rot;
-		if (!node.translation.empty()) 	pos.Set ( node.translation[0], node.translation[1], node.translation[2] );
-		if (!node.rotation.empty())			rot.set ( node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]);
-		if (!node.scale.empty())				scal.Set ( node.scale[0], node.scale[1], node.scale[2] );
+    Matrix4F mat;
+    if (!node.matrix.empty()) {
+      // Local matrix provided on node
+      mat = node.matrix.data();
 
-		Matrix4F mat;
-		mat.TRST ( pos, rot, scal, Vec3F(0,0,0) );
+    } else {
+      // Construct local matrix from TRS (Translation, Rotation, Scale)
+  		Vec3F pos (0,0,0);		
+		  Vec3F scal (1,1,1);
+		  Quaternion rot;
+		  if (!node.translation.empty()) 	pos.Set ( node.translation[0], node.translation[1], node.translation[2] );
+		  if (!node.rotation.empty())			rot.set ( node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]);
+		  if (!node.scale.empty())				scal.Set ( node.scale[0], node.scale[1], node.scale[2] );
+  		mat.TRST ( pos, rot, scal, Vec3F(0,0,0) );
+    }
+  
 		return mat;
 	} 
 
@@ -672,7 +678,7 @@ void Scene::CreateSceneDefaults ()
 			for (int root : model.scenes[i].nodes) {
 				if (root == nodeIndex) {
 					Matrix4F s;
-					s.Scale ( 10,10,10);
+					s.Scale ( 1,1,1 );
 					return s * local;			 // Root node: no parents
 				}
 			}
@@ -787,8 +793,8 @@ void Scene::CreateSceneDefaults ()
 						mesh->ReserveBuffer ( BFACEV3, tris );
 					} 
 				} else {
-					mesh->MemcpyBuffer (BFACEV3, buf, len, cnt);
-					tris = cnt;
+          tris = cnt / 3;
+					mesh->MemcpyBuffer (BFACEV3, buf, len, tris );					
 				}				
 			}
 	
@@ -811,35 +817,15 @@ void Scene::CreateSceneDefaults ()
 			
 			if ( mesh_id >= 0 ) {
 
-				mesh_name = model.meshes[ mesh_id ].name;
-				
-			/* if (name.compare("pelvis_mesh")==0 || name.compare("torso_link_mesh") ==0  ||
-						name.compare("pelvis_mesh.001")==0 || name.compare("right_shoulder_pitch_link_mesh") == 0
-			   ) { */			  
+				mesh_name = model.meshes[ mesh_id ].name;	  
 
 				Transform* xform = dynamic_cast<Transform*>(CreateObject('tfrm', "T_" + name));		
 				xform->SetInput("material", "BasicMtl");
 				xform->SetInput("mesh", mesh_name);	
 
-				/*pos.Set(0,0,0);
-				scal.Set(1,1,1);
-				rot.Identity();
-				if (node.translation.size()==3) pos.Set ( node.translation[0], node.translation[1], node.translation[2] );
-				if (node.scale.size()==3)				scal.Set( node.scale[0], node.scale[1], node.scale[2]);
-				if (node.rotation.size()==4)		rot.set ( node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3] );
-				xform->SetXform ( pos, rot, scal );  */
-
-			if (name.compare("right_shoulder_pitch_link_mesh") == 0) {
-				bool stop=true;
-			}
-
 				Matrix4F mtx = getGLTFWorldTransform(model, n);				
 				mtx.ReverseTRS ( pos, rot, scal );
 				xform->SetXform ( pos, rot, scal );
-	
-			
-				// }
-			
       }
 
 		}		

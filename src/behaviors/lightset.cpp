@@ -26,7 +26,7 @@ void LightSet::Define (int x, int y)
 	CreateOutput('Ashp');
 
 	AddParam( L_LIGHT0,	 "light",	"33333");	
-		SetParamV3( L_LIGHT0, 0, Vec3F(200,400,300) );		// pos
+		SetParamV3( L_LIGHT0, 0, Vec3F(100,200,50) );		// pos
 		SetParamV3( L_LIGHT0, 1, Vec3F(0, 0, 0) );				// target
 		SetParamV3( L_LIGHT0, 2, Vec3F(0.1, 0.1, 0.1) );			// ambient clr
 		SetParamV3( L_LIGHT0, 3, Vec3F(0.7,0.7,0.7) );		// diffuse clr

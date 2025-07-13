@@ -55,16 +55,15 @@ flat out ivec4 vmatids;
 
 vec4 CLRtoVEC(uint c) { return vec4( float(c & uint(0xFF))/255.0, float((c>>8) & uint(0xFF))/255.0, float((c>>16) & uint(0xFF))/255.0, float((c>>24) & uint(0xFF))/255.0 ); }
 
-mat3 getInvTranspose(mat4 a) { return transpose(inverse(mat3(a))); }
-
+mat3 getInvTranspose( mat4 a ) { return transpose(inverse(mat3(a))); }
 
 void main() 
 {
 	int inst = gl_InstanceID;		
 
-	vworldpos = instXform * vec4(inPos, 1);
-	vviewpos = viewMatrix * vworldpos;
-	vnormal = normalize(getInvTranspose(instXform) * inNorm);
+  vworldpos = instXform * vec4(inPos, 1);
+  vviewpos = viewMatrix * vworldpos;
+  vnormal = normalize ( getInvTranspose( instXform ) * inNorm );
 
   vtexcoord = vec3 ( inTexCoord* instTexSub.zw + instTexSub.xy, gl_InstanceID );
 	vmatids = ivec4 ( instMatIDS );

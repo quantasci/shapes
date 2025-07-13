@@ -158,20 +158,20 @@ bool Sample::init ()
 
 	// Usage - no scene file
 	if (m_SceneFile.empty()) {
-		dbgprintf("\nNO SCENE FILE FOUND\n\n");
-		dbgprintf ("Usage: shapes {scene_file}\n\n");
-		dbgprintf ("{scene_file}   Scene file to render, txt or gltf.\n\n");
-      	        dbgprintf ("Data Path: %s  <-- searching for scenes here\n", ASSET_PATH );
- 	        dbgprintf ("Shader Path: %s\n", SHADER_PATH );
-   	        dbgprintf ("\n");		
-		exit(-1);
+    dbgprintf("\nNO SCENE FILE FOUND\n\n");
+    dbgprintf ("Usage: shapes {scene_file}\n\n");
+    dbgprintf ("{scene_file}   Scene file to render, txt or gltf.\n\n");
+    dbgprintf ("Data Path: %s  <-- searching for scenes here\n", ASSET_PATH );
+    dbgprintf ("Shader Path: %s\n", SHADER_PATH );
+    dbgprintf ("\n");		  
+    exit(-1);
 	}
 
 	// Instrumentation
-	dbgprintf ( "Perf profiling:\n");
-	bool cpu_perf = PROFILE;	
-	bool gpu_perf = PROFILE;
-	PERF_INIT ( 64, cpu_perf, gpu_perf, true, 0, "" );		// cpu, gpu, cons
+  //dbgprintf ( "Perf profiling:\n");
+  bool cpu_perf = PROFILE;	
+  bool gpu_perf = PROFILE;
+  PERF_INIT ( 64, cpu_perf, gpu_perf, true, 0, "" );		// cpu, gpu, cons
 
 	#ifdef USE_CUDA
 		// Start CUDA	
@@ -181,18 +181,19 @@ bool Sample::init ()
 		cuStart ( DEV_FIRST, 0, dev, ctx, 0, true );
 	#endif
 
-	// Primary assets path
-	std::string PrimaryAssetsDir = "F:\\Master-Assets\\";
-
 
 	// Search paths
-	addSearchPath ( ASSET_PATH );	
-	addSearchPath ( SHADER_PATH );	
-	addSearchPath ( "." );	
+ // dbgprintf ( "ASSET PATH: %s\n", ASSET_PATH );
+  //dbgprintf ( "SHADER PATH: %s\n", SHADER_PATH );
+  addSearchPath( "D:\\assets" );
+  addSearchPath ( ASSET_PATH );	
+  addSearchPath ( SHADER_PATH );	
+  addSearchPath ( "." );	
 	
 	// Delay-Loaded Assets 
-	gAssets.AddAssetPath ( ASSET_PATH );
-	gAssets.AddAssetPath ( SHADER_PATH );
+  gAssets.AddAssetPath( "D:\\assets" );
+  gAssets.AddAssetPath ( ASSET_PATH );
+  gAssets.AddAssetPath ( SHADER_PATH );
 	
 	// GUI interface
 	dbgprintf("Starting GUI.\n");
@@ -205,9 +206,15 @@ bool Sample::init ()
 		mOptix.InitializeOptix ( w, h );	
 	#endif
 
-	// Load Scene 		
-	dbgprintf("\nLOADING SCENE: %s\n", m_SceneFile.c_str() );	
-	mScene.Load ( m_SceneFile, w, h);	// load scene file	
+	// Load Scene 			
+  std::string filepath;
+  if (getFileLocation(m_SceneFile, filepath)) {
+    dbgprintf("\nLOADING SCENE: %s\n", filepath.c_str());
+	  mScene.Load ( m_SceneFile, w, h);	// load scene file	
+  } else {
+    dbgprintf("\n**** ERROR: Unable to find file %s\n", m_SceneFile.c_str());
+    exit(-1);
+  }
 
 	// load anatomy models
 	//gAssets.LoadDir ( "F:\\anatomy_data\\obj\\", "*.*", failed );
@@ -765,7 +772,7 @@ void Sample::startup ()
 		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_LEAK_CHECK_DF);
 	#endif
 
-	appStart ( "Shapes (c) 2010-2025", "Shapes (c) 2010-2025", w, h, 4, 2, 1, DEBUG_GL );
+	appStart ( "Shapes (c) 2010-2025", "Shapes (c) 2010-2025", w, h, 4, 2, 8, DEBUG_GL );
 
 	printf ("SHAPES (c) Quanta Sciences 2010-2025\n");
 	printf ("by Rama C. Hoetzlein, ramakarl.com\n");

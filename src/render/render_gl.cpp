@@ -168,7 +168,7 @@ void RenderGL::Initialize ()
 	//csm_depth_size = 16384;		// CSM res
 	//csm_depth_size = 8192;			// CSM res
 	csm_depth_size = 4096;			// CSM res
-	csm_split_weight = 0.5;			// CSM split weight
+	csm_split_weight = 0.7;			// CSM split weight
 
 	shad_csm_pass = false;
 
@@ -702,8 +702,8 @@ void RenderGL::EndRender ()
 	glFramebufferTexture ( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, out_tex, 0 );			// Write to final output
 
 
-
-	compositeTexGL ( 1.0, res.x, res.y, mGLTex, mVolTex, 1, 0 );						// Composite resolved GL buffer with volume (alpha blend)
+  renderTexGL ( 0, 0, res.x, res.y, mGLTex, 1 );
+	//compositeTexGL ( 1.0, res.x, res.y, mGLTex, mVolTex, 1, 0 );						// Composite resolved GL buffer with volume (alpha blend)
 
 	CHECK_GL("composite", mbDebug);
 	//compositeTexGL ( 1.0, res.x, res.y, mDTex, mVolTex, 1, 0 );						
@@ -778,55 +778,58 @@ float RenderGL::CSMApplyCropMatrix(frustum& f)
 	Matrix4F split_crop;
 	Matrix4F split_mvp;
 
-	float maxX = -100000.0f;
-	float maxY = -100000.0f;
-	float maxZ;
-	float minX = 100000.0f;
-	float minY = 100000.0f;
-	float minZ;
-
-	Vec4F	transf;
+	float maxX = -1e10f, maxY = -1e10f;
+	float minX =  1e10f, minY =  1e10f;
+	float minZ, maxZ;
 
 	// find the z-range of the current frustum as seen from the light
 	// in order to increase precision
-	transf = Vec4F(f.point[0]) * shad_light_mv;		// note that only the z-component is need and thus the multiplication is simplified (single point transform)
-	minZ = transf.z; maxZ = transf.z;
+  Vec4F	transf = Vec4F(f.point[0]) * shad_light_mv;		// note that only the z-component is need and thus the multiplication is simplified (single point transform)
+	minZ = maxZ = transf.z;
+
 	for (int i = 1; i < 8; i++) {				
 		transf = Vec4F(f.point[i]) * shad_light_mv;
-		if (transf.z > maxZ) maxZ = transf.z;
 		if (transf.z < minZ) minZ = transf.z;
+		if (transf.z > maxZ) maxZ = transf.z;
 	}
+
+  // *NOTE*
+  // work around for minZ/maxZ padding each cascade near/far to include all shadow casters
+  float zPadding = 20.0f;
+  minZ -= zPadding;
+  maxZ += zPadding;
+  if (minZ < 0.1f) minZ = 0.1f;
+
 	//minZ = 1.0;
 	//maxZ = 1000.0;
 	// here, minZ/maxZ will be the nearest/farthest camera frustum point as viewed on the lights z-axis
 
 	// make sure all relevant shadow casters are included
 	// note that these here are dummy objects at the edges of our scene
-	/*	for (int i = 0; i < NUM_OBJECTS; i++)
-	{
+	/*	for (int i = 0; i < NUM_OBJECTS; i++) {
 		transf = obj_BSphere[i].center * shadowMtx;
 		if (transf.z + obj_BSphere[i].radius > maxZ) maxZ = transf.z + obj_BSphere[i].radius;
 		//	if(transf.z - obj_BSphere[i].radius < minZ) minZ = transf.z - obj_BSphere[i].radius;
 	}*/
 
-	// set the projection matrix with the new z-bounds note the inversion because the light looks at the neg z axis.
-	// the minZ/maxZ is specific to the split, so then is shad_proj and shad_mvp
-	split_proj.makeOrtho (-1.0, 1.0, -1.0, 1.0, -maxZ, -minZ);			// gluPerspective(LIGHT_FOV, 1.0, maxZ, minZ); // for point lights
-	
-	split_mvp = split_proj;
-	split_mvp *= shad_light_mv;						// p' = proj * model * view * p     world -> light
+  // set the projection matrix with the new z-bounds note the inversion because the light looks at the neg z axis.
+  // the minZ/maxZ is specific to the split, so then is shad_proj and shad_mvp
+  split_proj.makeOrtho (-1.0, 1.0, -1.0, 1.0, -maxZ, -minZ);			// gluPerspective(LIGHT_FOV, 1.0, maxZ, minZ); // for point lights
+  split_mvp = split_proj;
+  split_mvp *= shad_light_mv;						// p' = proj * model * view * p     world -> light
 	
 
-	// get the crop matrix:
-	// find the extents of the frustum slice as projected in light's homogeneous coordinates
-	// this is what the split frustum looks like in the light's 2D view plane (region of interest)
-	for (int i = 0; i < 8; i++) {
-		transf = Vec4F(f.point[i]) * split_mvp;
-		transf.x /= transf.w; transf.y /= transf.w;
-		if (transf.x > maxX) maxX = transf.x;
-		if (transf.x < minX) minX = transf.x;
-		if (transf.y > maxY) maxY = transf.y;
-		if (transf.y < minY) minY = transf.y;
+  // get the crop matrix:
+  // find the extents of the frustum slice as projected in light's homogeneous coordinates
+  // this is what the split frustum looks like in the light's 2D view plane (region of interest)
+  for (int i = 0; i < 8; i++) {
+    transf = Vec4F(f.point[i]) * split_mvp;
+    transf.x /= transf.w; 
+    transf.y /= transf.w;
+    if (transf.x < minX) minX = transf.x;
+		if (transf.x > maxX) maxX = transf.x;		
+    if (transf.y < minY) minY = transf.y;
+		if (transf.y > maxY) maxY = transf.y;		
 	}
 	float scaleX = 2.0f / (maxX - minX);
 	float scaleY = 2.0f / (maxY - minY);
@@ -835,8 +838,10 @@ float RenderGL::CSMApplyCropMatrix(frustum& f)
 
 	// apply a crop matrix to modify the projection matrix we got from glOrtho.
 	split_crop.Identity();
-	split_crop(0, 0) = scaleX;	split_crop(1, 1) = scaleY;
-	split_crop(3, 0) = offsetX;	split_crop(3, 1) = offsetY;
+	split_crop(0, 0) = scaleX;	
+  split_crop(1, 1) = scaleY;
+	split_crop(3, 0) = offsetX;	
+  split_crop(3, 1) = offsetY;
 	split_crop.Transpose ();
 	
 	// current light projection matrix (will be sent to shader)
@@ -852,9 +857,9 @@ void RenderGL::CSMViewSplits (Camera3D* cam )
 {	
 	// get camera matrices	
 	const float Tbias[16] = { 0.5f, 0.0f, 0.0f, 0.0f,
-								0.0f, 0.5f, 0.0f, 0.0f,
-								0.0f, 0.0f, 0.5f, 0.0f,
-								0.5f, 0.5f, 0.5f, 1.0f };
+                            0.0f, 0.5f, 0.0f, 0.0f,
+                            0.0f, 0.0f, 0.5f, 0.0f,
+                            0.5f, 0.5f, 0.5f, 1.0f };
 	float* cam_proj = cam->getProjMatrix().GetDataF();
 	
 	Matrix4F inv;
@@ -866,14 +871,14 @@ void RenderGL::CSMViewSplits (Camera3D* cam )
 		// Compute: The far distance of each split as a depth value.
 		//  f[i].fard is originally in eye space - tell's us how far we can see.
 		//  Here we compute it in camera homogeneous coordinates (ie. depth value). Basically, we calculate cam_proj * (0, 0, f[i].fard, 1)^t and then normalize to [0; 1]
-		far_bound[i] = 0.5f * (-f[i].fard * *(cam_proj+10) + *(cam_proj+14) ) / f[i].fard + 0.5f;
+		far_bound[i] = 0.5f * (-f[i].fard * cam_proj[10] + cam_proj[14]) / f[i].fard + 0.5f;
 
 		// Compute a matrix that transforms from camera eye space to light clip space 
 		// to be passed to the view shader later
-		shad_vmtx[i] = Tbias;			// texture lookup. projected (-1,1) --> texture (0,1)     t = p*0.5 + 0.5
+		shad_vmtx[i] = Tbias;     // texture lookup. projected (-1,1) --> texture (0,1)     t = p*0.5 + 0.5
 		shad_vmtx[i] *= shad_cpm[i];		
-		shad_vmtx[i] *= inv;			// we must transform from the camera view because we need the camera z-depth value 
-										// of the test points, otherwise we could have used their world pos
+		shad_vmtx[i] *= inv;      // we must transform from the camera view because we need the camera z-depth value 
+                              // of the test points, otherwise we could have used their world pos
 
 	}
 }
@@ -899,14 +904,14 @@ void RenderGL::CSMRenderShadowMaps()
 	if ( lgts->getNumLights()==0 ) return;
 	RLight* lgt = lgts->getLight(0);
 	Vec3F	ldir = lgt->pos - lgt->target;	ldir.Normalize();			// directional light
-	shad_light_mv.makeLookAt (Vec3F(0, 0, 0), Vec3F(-ldir.x, -ldir.y, -ldir.z), Vec3F(0.0f, 1.0f, 0.0f) );
+	shad_light_mv.makeLookAt (Vec3F(0, 0, 0), ldir * -1.f, Vec3F(0.0f, 1.0f, 0.0f) );
 
 	// Redirect rendering to the depth texture	
 	glBindFramebuffer(GL_FRAMEBUFFER, depth_fb);
 	glViewport(0, 0, csm_depth_size, csm_depth_size);				// shadow map size
 	
 	glEnable(GL_POLYGON_OFFSET_FILL);
-	glPolygonOffset(1.0f, 4096.0f);								// offset the geometry slightly to prevent z-fighting note that this introduces some light-leakage artifacts
+	//glPolygonOffset(1.0f, 4096.0f);								// offset the geometry slightly to prevent z-fighting note that this introduces some light-leakage artifacts
 	glDisable(GL_CULL_FACE);									// draw all faces since our terrain is not closed.
 	glDisable(GL_BLEND);
 	glDepthMask (GL_TRUE);
@@ -923,8 +928,7 @@ void RenderGL::CSMRenderShadowMaps()
 	// Render the shadow maps
 	for (int i = 0; i < csm_num_splits; i++)
 	{
-		CSMUpdateFrustum (f[i], cam);							// compute the camera frustum slice boundary points in world space
-		
+		CSMUpdateFrustum (f[i], cam);							// compute the camera frustum slice boundary points in world space		
 		float minZ = CSMApplyCropMatrix(f[i]);		// adjust the view frustum of the light, so that it encloses the camera frustum slice fully.		
 		
 		glFramebufferTextureLayer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_tex_ar, 0, i);		// make the current depth map a rendering target

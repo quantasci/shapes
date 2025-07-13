@@ -60,7 +60,7 @@ void main ()
 	int m = vmatids.x;
 	int t = int( mat[m].texids.x );
 	vec4 texclr = (t == NULL_NDX) ? vec4(1,1,1,1) : texture( tex[t], vtexcoord.xy );
-	if (texclr.w < 0.5) discard;												// discard for proper alpha blend
+	//if (texclr.w < 0.5) discard;												// discard for proper alpha blend
 
 	outColor = vec4(gl_FragCoord.z, gl_FragCoord.z, gl_FragCoord.z, 1 );		// write depth value to output	
 }
