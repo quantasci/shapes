@@ -63,7 +63,7 @@ struct Material {
 };
 layout(std140) uniform MATERIAL_BLOCK
 {
-	Material		mat[64];
+	Material		mat[128];
 };
 // textures data block
 layout(std140) uniform TEXTURE_BLOCK
@@ -174,7 +174,7 @@ void main ()
 	int m = vmatids.x;					// material
 	int t = int( mat[m].texids.x );		// color texture
 	int b = int( mat[m].texids.y );		// bump map
-	vec3 lgtdir, R, V, spec, clr;
+	vec3 lgtdir, R, V, spec, diff, clr;
 	vec4 texclr;	
 	float ndotl;
 	
@@ -227,13 +227,16 @@ void main ()
 	clr += mat[m].reflclr.xyz * texture( tex[ int(envMap.x) ], ec ).xyz;	
 
 	// multiple lights
-	for (int i=1; i < numLgt; i++ ) {
-		lgtdir = normalize( light[i].pos.xyz - vworldpos.xyz );
-    ndotl = dot(vbumpnorm, lgtdir);
-		R = normalize( vnormal * (2.0f * ndotl ) - lgtdir );
-		spec = mat[m].specclr.xyz * pow( max(0.0f, dot(R, V)), mat[m].surfp.x );		
-		clr += light[i].diffclr.xyz * (texclr.xyz * mat[m].diffclr.xyz * max(0.0f, ndotl) + spec);
-	}	
+  float dist;
+  for (int i = 1; i < numLgt; i++) {
+    lgtdir = light[i].pos.xyz - vworldpos.xyz;
+    dist = length(lgtdir);
+    lgtdir /= dist;
+    R = reflect(-lgtdir, vbumpnorm);
+    spec = mat[m].specclr.xyz * pow(max(0.0f, dot(R, V)), mat[m].surfp.x);
+    diff = mat[m].diffclr.xyz * max(0.0f, dot(lgtdir, vnormal));
+    clr += light[i].diffclr.xyz * (texclr.xyz * diff + spec) / (dist * dist / 20.0);
+  }
 
 
 	// environment probe lighting	

@@ -38,8 +38,7 @@
 		bool	LoadGLTF (std::string fname, int w, int h);
 		void	CreateSceneDefaults();
 		void	SaveScene ( std::string fname );		
-		void	CreateScene (int w, int h);		// test scene
-		int		ParseArgs(std::string value, std::vector<std::string>& args);
+		void	CreateScene (int w, int h);		// test scene		
 		void	Stats ();
 
 		Object* CreateObject ( objType ot, std::string name );		// Define is performed here

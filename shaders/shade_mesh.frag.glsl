@@ -62,7 +62,7 @@ struct Material {
 };
 layout(std140) uniform MATERIAL_BLOCK
 {
-	Material		mat[64];
+	Material		mat[128];
 };
 // textures data block
 layout(std140) uniform TEXTURE_BLOCK
@@ -120,8 +120,8 @@ vec2(-0.43198480, -0.30202311),
 vec2(0.06044658, -0.99696076)
 };
 
-const int nsamples = 32;				// number of samples (shadow quality)
-const float bias = -0.001;
+const int nsamples = 16;				// number of samples (shadow quality)
+
 
 float rand(vec2 co) {
 	return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
@@ -131,7 +131,12 @@ vec2 randomRotation(vec2 fragCoord) {
 	return vec2(cos(angle), sin(angle));
 }
 
-float shadowCoeff ( float ndotl, float lwid )
+float calcShadowBias(vec3 N, vec3 L, float baseBias, float slopeScale) 
+{
+  return baseBias + slopeScale * (1.0 - max(dot(N, L), 0.0));
+}
+
+float shadowCoeff ( float ndotl, float lwid, vec3 N, vec3 L )
 {
 	float val, ret = 0;
 	int j, k, index = 7;											// find the appropriate depth map to look up in based on the depth of this fragment
@@ -148,16 +153,17 @@ float shadowCoeff ( float ndotl, float lwid )
 	shadow_coord.w = shadow_coord.z;											// R value = depth value of the current sample point (vviewpos) in lights view
 	shadow_coord.z = float(index);												// layer (split)																
   //return shadow2DArray(shadowTex, shadow_coord).x;		// [optional] single sample only (fast)
+  float bias = calcShadowBias(N, L, 0.0001, 0.001);
 	  
 	vec2 randomRot = randomRotation(gl_FragCoord.xy);
 
 	// PCF filtering
-	lwid *= 0.00002;
+	lwid *= 0.0000001;
 	for (int i = 0; i < nsamples; i++) {
 		// poisson disc sample
 		jit = vec4((poisson[i].x * randomRot.x - poisson[i].y * randomRot.y) * lwid,
-			(poisson[i].x * randomRot.y + poisson[i].y * randomRot.x) * lwid,
-			0, bias);
+               (poisson[i].x * randomRot.y + poisson[i].y * randomRot.x) * lwid,
+                0, -bias);
 		// val: depends on depth compare mode, {1 if R <= Dt, 0 if R >= Dt}.. see OpenGL 2.0 spec, sec 3.8, p. 188			
 		ret += shadow2DArray(shadowTex, shadow_coord + jit).x;
 	}
@@ -226,10 +232,11 @@ void main ()
 	R = reflect ( -lgtdir, vnormal );
 	spec = mat[m].specclr.xyz * pow( max(0.0f, dot(R, V)), mat[m].surfp.x );
 	diff =  mat[m].diffclr.xyz * max(0.0f, ndotl );	
-	clr = mat[m].ambclr.xyz + light[0].ambclr.xyz + shadowCoeff(ndotl, mat[m].surfp.y) * light[0].diffclr.xyz * (texclr.xyz * diff + spec);
+	clr = mat[m].ambclr.xyz + light[0].ambclr.xyz + shadowCoeff(ndotl, mat[m].surfp.y, vnormal, lgtdir) * light[0].diffclr.xyz * (texclr.xyz * diff + spec);
 	//clr = mat[m].ambclr.xyz + light[0].ambclr.xyz + light[0].diffclr.xyz * (texclr.xyz * diff + spec);	
+  //clr = texclr.xyz * diff;      //-- debug just textures
 
-	// env reflection
+	// env reflection  
 	vec2 ec;
 	R = normalize ( reflect ( -V, vnormal ) );  
 	ec.x = atan(R.z, R.x) / (2*PI) + 0.5f;
@@ -237,13 +244,16 @@ void main ()
 	clr += mat[m].reflclr.xyz * texture( tex[ int(envMap.x) ], ec ).xyz;
 
 	// multiple lights
+  float dist;
 	for (int i=1; i < numLgt; i++ ) {
-		lgtdir = normalize( light[i].pos.xyz - vworldpos.xyz );
-		R = normalize( vnormal * (2.0f*dot ( vnormal, lgtdir)) - lgtdir );
+    lgtdir = light[i].pos.xyz - vworldpos.xyz;
+    dist = length(lgtdir);
+		lgtdir /= dist;
+    R = reflect(-lgtdir, vnormal);
 		spec = mat[m].specclr.xyz * pow( max(0.0f, dot(R, V)), mat[m].surfp.x );
-		diff = mat[m].diffclr.xyz * max(0.0f,dot( vnormal, lgtdir ));
-		clr += light[i].diffclr.xyz * (texclr.xyz * diff + spec);
-	}		
+		diff = mat[m].diffclr.xyz * max(0.0f, dot(lgtdir, vnormal) );
+		clr += light[i].diffclr.xyz * (texclr.xyz * diff + spec) / (dist*dist/20.0) ;
+	}
 	
 	// environment probe lighting	
 	if ( envClr.w != 0 ) {

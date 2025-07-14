@@ -82,6 +82,7 @@ objType ObjectList::getObjTypeFromExtension ( std::string ext )
 	std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return std::tolower(c); });
 
 	if ( ext.compare( "jpg")==0 ) return 'Aimg';
+  if ( ext.compare( "jpeg")== 0) return 'Aimg';
 	if ( ext.compare( "png")==0 ) return 'Aimg';
 	if ( ext.compare( "tga")==0 ) return 'Aimg';
 	if ( ext.compare( "tif")==0 ) return 'Aimg';
@@ -270,8 +271,7 @@ int	ObjectList::DeleteObject(Object* obj)
 }
 
 
-
-bool ObjectList::AddObjectFromFile ( objType otype, std::string name, std::string fname, Object*& obj )
+bool ObjectList::LoadObjectFromFile ( objType otype, std::string name, std::string fname, Object*& obj )
 {	
 	std::string errmsg = "";
 
@@ -286,9 +286,6 @@ bool ObjectList::AddObjectFromFile ( objType otype, std::string name, std::strin
 		
 	// Load object
 	if ( obj->isAsset() && !fname.empty() ) {
-
-		if (fname.find("env_sky_grey") != std::string::npos)
-			bool stop=true;
 
     // images & meshes loaded here via libmin
 		obj->mLoaded = obj->Load ( fname );		
@@ -408,17 +405,32 @@ int ObjectList::AddAssetPath ( std::string path )
 
 	for (int n=0; n < mDir->getNumFiles(); n++ ) {
 		d = mDir->getFile(n);		
-		otype = getObjTypeFromExtension ( d.extension );					// Get file type
-		if ( otype != 'null' && otype != 'dir ') {			
-			mAssetFiles.push_back ( path + d.text + "." + d.extension );	// Add to list of file assets
-			ok++;
-		}		
+    if ( !AddAsset ( path + d.text + "." + d.extension ).empty() ) {
+      ok++;
+    }
 	}
-
 	// Clear director listing
 	delete mDir;
 	
 	return ok;
+}
+// AddAsset
+// - add to list of available assets
+// - optionally check if the file exists
+std::string ObjectList::AddAsset (std::string filestr, bool bChk )
+{
+  std::string filepath = filestr;
+  if (bChk && !getFileLocation(filestr, filepath)) {
+    return "";
+  }  
+  std::string path, name, ext;  
+  getFileParts( filepath, path, name, ext  );
+  objType otype = getObjTypeFromExtension( ext );					// Get file type
+  if (otype != 'null' && otype != 'dir ') {
+    mAssetFiles.push_back(path + name + "." + ext);
+    return name;
+  }
+  return "";
 }
 
 // LoadAllAssets - load all the files from scanned asset paths
@@ -438,7 +450,8 @@ int ObjectList::LoadAllAssets ()
 }
 
 // LoadObject - 
-// Load an object from the asset list by base name.
+// Load an object from the asset list by base name
+//
 Object* ObjectList::LoadObject ( std::string asset_name )
 {
 	Object* obj;
@@ -446,12 +459,13 @@ Object* ObjectList::LoadObject ( std::string asset_name )
 	std::string fname, path, name, ext;
 
 	for (int n=0; n < mAssetFiles.size(); n++ ) {
+
 		fname = mAssetFiles[n];
 		getFileParts ( fname, path, name, ext );
 		otype = getObjTypeFromExtension( ext);
-		
 		if ( asset_name.compare(name)==0) {		
-			if (AddObjectFromFile ( otype, name, fname, obj ))
+      // add unloaded asset as loaded object
+			if (LoadObjectFromFile ( otype, name, fname, obj ))
 				return obj;
 		}
 	}
@@ -467,10 +481,10 @@ Object* ObjectList::FindObject ( std::string asset_name )
 
 Object* ObjectList::FindOrLoadObject ( std::string asset_name )
 {
-	// Find 
+	// Find - behavior or loaded asset in list
 	Object* obj = gAssets.getObj ( asset_name );	
 	if (obj == 0x0 ) {
-		// Load
+		// Load - from unloaded asset file list
 		obj = LoadObject ( asset_name );
 	}
 	return obj;

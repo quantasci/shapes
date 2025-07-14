@@ -477,29 +477,6 @@ Camera3D* Scene::getCamera3D()
 	return camera->getCam3D();
 }
 
-
-int Scene::ParseArgs ( std::string value, std::vector<std::string>& args)
-{
-	// change commas inside vectors to semi-colons
-	int sub = 0;
-	for (int n=0; n < value.length(); n++) {
-		if (value.at(n)=='<') sub++;
-		if (value.at(n)=='>') sub--;
-		if (value.at(n)==',' && sub != 0) value.at(n) = ';' ;
-	}
-
-	// parse arguments
-	args.clear ();
-	std::string arg, rest;
-	while ( strSplitLeft( value, "," , arg, rest ) ) {
-		args.push_back ( strTrim(arg) );
-		value = rest;
-	}
-	arg = value;
-	args.push_back ( strTrim(arg) );
-	return args.size();
-}
-
 void Scene::SaveScene ( std::string fname )
 {
 	// Append 'saved'
@@ -555,7 +532,7 @@ void Scene::CreateSceneDefaults ()
 	// Create global
 	if (FindByType('glbs') == 0x0) {
 		obj = CreateObject('glbs', "Globals");
-		obj->SetInput("envmap", "env_sky");
+		obj->SetInput("envmap", "env_warehouse");
 		obj->SetParamV4(G_ENVCLR, 0, Vec4F(1, 1, 1, 1));
 	}
 
@@ -566,12 +543,20 @@ void Scene::CreateSceneDefaults ()
 
 	// Create default light(s)
 	if (FindByType('Algt') == 0x0) {
-		obj = CreateObject('lgts', "Lights");
+		LightSet* ls = (LightSet*) CreateObject('lgts', "Lights");
+    // light[#], pos, target, ambient, diffuse, shadow        
+    ls->FindOrCreateParams( "light, <0,5,0>, <-.5,0,0>, <0,0,0>, <.7,.7,.7>, <0,0,0>");
+    ls->FindOrCreateParams( "light[2], <0,5,0>, <0,0,0>, <0,0,0>, <.6,.6,.6>, <0,0,0>");    
+    //ls->FindOrCreateParams( "light[1], <-5,8,-20>, <0,0,0>, <0,0,0>, <.4,.4,.5>, <0,0,0>");    
+    //ls->FindOrCreateParams( "light[2], < 5,8, 10>, <0,0,0>, <0,0,0>, <.5,.4,.4>, <0,0,0>");
+    //ls->FindOrCreateParams( "light[3], <-5,8,  0>, <0,0,0>, <0,0,0>, <1,.8,1>, <0,0,0>");
+    //ls->FindOrCreateParams( "light[4], < 5,8,-10>, <0,0,0>, <0,0,0>, <1,1,1>, <0,0,0>");
 	}
 
 	// Create default cameras
 	if (FindByType('camr') == 0x0) {
 		obj = CreateObject('camr', "Camera");
+    obj->SetParamV3(C_NEARFAR, 0, Vec3F(.1,100,0) );
 		obj->SetParamF(C_FOV, 0, 40.0);
 	}
 
@@ -591,18 +576,22 @@ void Scene::CreateSceneDefaults ()
 	#include "tiny_gltf.h"
 
 
-	int getGLTFAccessor ( tinygltf::Mesh& mesh, std::string attr, int& mode )
+	int getGLTFAccessor ( tinygltf::Mesh* mesh, int p, std::string attr, int& mode )
 	{
-		// Mesh can have multiple primitives
-		for (const auto& primitive : mesh.primitives) {			
-			auto it = primitive.attributes.find(attr);
-			if (it != primitive.attributes.end()) {
-				mode = primitive.mode;
-				return it->second;  // Return the accessor index
-			}
-		}
+    tinygltf::Primitive* prim = &mesh->primitives[p];
+		auto it = prim->attributes.find(attr);
+		if (it != prim->attributes.end()) {
+			mode = prim->mode;
+			return it->second;    // Return the accessor index
+		}	
 		return -1;
 	}
+
+  int getGLTFMeshMtl (tinygltf::Mesh* mesh, int p )
+  {
+    return mesh->primitives[p].material;    
+  }
+
 
 	bool getGLTFBuffer ( tinygltf::Model& model, int access, uchar*& buf, int& len, int& cnt, int& csz, Vec3F& bmin, Vec3F& bmax )
 	{	
@@ -695,6 +684,16 @@ void Scene::CreateSceneDefaults ()
 		return local;			// If no parent found
 	}
 
+
+  std::string getGLTFTexture(const tinygltf::Model& model, int texID)
+  {
+    if (texID==-1) return "";
+    int imgID = model.textures[texID].source;
+    std::string filepath = fixPath(model.images[imgID].uri);
+    std::string name = gAssets.AddAsset ( filepath, true );     // true = confirm exists
+    return name;  // model.images[imgID].name;
+  }
+
 	bool Scene::LoadGLTF ( std::string fname, int w, int h )
 	{
 		bool debug_gltf = true;
@@ -707,8 +706,12 @@ void Scene::CreateSceneDefaults ()
 		}
 		tinygltf::Model model;
 		tinygltf::TinyGLTF loader;
+    tinygltf::Mesh* gmesh;
+    tinygltf::Material* gmtl;
+    std::vector<std::string> mtlNames;
+    int mtl_id;
 		std::string err, warn;
-		std::string name, mesh_name;
+		std::string name, mesh_name, tex_name;
 		uchar* buf; 
 		int len, cnt, csz;
 		int verts=0, tris=0;
@@ -716,10 +719,11 @@ void Scene::CreateSceneDefaults ()
 		Quaternion rot;
 		
 		// supported mesh accessors
-		std::string mesh_access_name[5] = {"NORMAL", "POSITION", "UV"};
+		std::string mesh_access_name[5] = {"NORMAL", "POSITION", "TEXCOORD_0"};
 		int mesh_access[5], mesh_indices;
 		Object* obj;
 		int mode;
+    
 
 		// Load GLTF
 		bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, filepath.c_str());
@@ -731,74 +735,135 @@ void Scene::CreateSceneDefaults ()
 			return false; 
 		}
 		dbgprintf( "GLTF Loading.. %s\n", fname.c_str());
-	
+
+    // Load materials
+    int m;
+    for (int m = 0; m < model.materials.size(); m++) {
+      
+      gmtl = &model.materials[m];
+      name = gmtl->name + "[m]";      // ensure unique names 
+  
+      obj = CreateObject( 'Amtl', name );
+
+      // apply diffuse color
+      if (gmtl->pbrMetallicRoughness.baseColorFactor.size() == 4) {
+        Vec4F clr ( gmtl->pbrMetallicRoughness.baseColorFactor[0], 
+                    gmtl->pbrMetallicRoughness.baseColorFactor[1],
+                    gmtl->pbrMetallicRoughness.baseColorFactor[2],      
+                    gmtl->pbrMetallicRoughness.baseColorFactor[3] );
+        if (clr.w < 0.5) name += "TRANSP";    // mark as transparent
+        obj->SetParam("diff_color", clr );
+      } else {
+        float d = 1 - 0.5 * gmtl->pbrMetallicRoughness.metallicFactor;
+        obj->SetParam("diff_color", Vec3F(d, d, d));
+      }
+      // apply roughness/metalic
+      float r = clamp((0.04 + gmtl->pbrMetallicRoughness.metallicFactor) * (1.0 - gmtl->pbrMetallicRoughness.roughnessFactor), 0, 1);
+      r += 0.02;
+      obj->SetParam("refl_color", Vec3F(r, r, r));
+      float e = (1 - r) * (1 - r);
+      //obj->SetParam( "env_color",  Vec3F(e,e,e) );
+      obj->SetParam("env_color", Vec3F(.02, .02, .02));
+      obj->SetParam("spec_power", float(1 + r * 10.0f));
+
+      // apply diffuse texture
+      tex_name = getGLTFTexture ( model, gmtl->pbrMetallicRoughness.baseColorTexture.index );      
+      if (!tex_name.empty()) {        
+        obj->SetInput ("texture", tex_name );         // <-- NOTE: assets are delay-loaded, so THIS line loads the texture
+      }
+      // apply roughness texture as bump
+      int dt = gmtl->pbrMetallicRoughness.metallicRoughnessTexture.index;
+      if (dt >= 0) {        
+        tex_name = getGLTFTexture(model, gmtl->pbrMetallicRoughness.baseColorTexture.index);
+        obj->SetInput("diffuse", tex_name);
+        obj->SetInput("shader", "shade_bump");
+        obj->SetParam("displace_amt", Vec3F(1, 0.002, 0.002));
+        obj->SetParam("displace_depth", Vec3F(0, 0.4, 0.4));
+      }      
+
+      dbgprintf("  Loaded: asset %d = %s (Amtl), tex: %s\n", obj->getID(), name.c_str(), tex_name.c_str() );
+
+      mtlNames.push_back( name );    // temporary list of: mtl_id -> material name
+    }
+
 		// Load mesh assets
 		//
 		for (int m = 0; m < model.meshes.size(); m++) {
 
-			// Get mesh accessors
-			mesh_name = model.meshes[m].name;
-			mesh_access[0] = getGLTFAccessor( model.meshes[m], "POSITION", mode );
-			mesh_access[1] = getGLTFAccessor( model.meshes[m], "NORMAL", mode);
-			mesh_access[2] = getGLTFAccessor( model.meshes[m], "UV", mode);
-			mesh_access[3] = -1;
-			mesh_access[4] = -1;
-			mesh_indices = model.meshes[m].primitives[0].indices;		// triangle info
+      gmesh = &model.meshes[m];
+      mesh_name = gmesh->name;
 
-			// Get mesh type
-			if (mode != TINYGLTF_MODE_TRIANGLES) {
-				dbgprintf ( "ERROR: Shapes GLTF loader only supports GL_TRIANGLES for now.\n");
-				exit(-3);
-			}
+      // Get primitives (multiple)
+      for (int p = 0; p < gmesh->primitives.size(); p++) {
+        mesh_access[0] = getGLTFAccessor( gmesh, p, "POSITION", mode );
+			  mesh_access[1] = getGLTFAccessor( gmesh, p, "NORMAL", mode);
+			  mesh_access[2] = getGLTFAccessor( gmesh, p, "TEXCOORD_0", mode);
+			  mesh_access[3] = -1;
+			  mesh_access[4] = -1;
+			  mesh_indices = gmesh->primitives[p].indices;		// triangle info
+
+			  // Get mesh type
+			  if (mode != TINYGLTF_MODE_TRIANGLES) {
+				  dbgprintf ( "ERROR: Shapes GLTF loader only supports GL_TRIANGLES for now.\n");
+				  exit(-3);
+			  }
 		
-			// Add mesh	asset
-			obj = gAssets.AddObject('Amsh', mesh_name );
-			MeshX* mesh = dynamic_cast<MeshX*>( obj );
+			  // Add mesh	asset (not in scene graph)
+			  obj = gAssets.AddObject('Amsh', mesh_name + iToStr(p) );
+			  MeshX* mesh = dynamic_cast<MeshX*>( obj );
 			
-			mesh->CreateFV();
+			  mesh->CreateFV();
 	
-			// add vertex positions
-			if (mesh_access[0] >=0 ) {				
-				getGLTFBuffer ( model, mesh_access[0], buf, len, cnt, csz, bmin, bmax);
-				verts = cnt;
-				mesh->MemcpyBuffer (BVERTPOS, buf, len, verts );
-				for (int v=0; v < verts; v++) {
-					pos = *mesh->GetVertPos(v);
-					mesh->SetVertPos ( v, pos );
-					if (pos < bmin || pos > bmax) {
-						dbgprintf ( "GLTF Read ERROR: Pos buffer corrupt. Pos outside bounds.\n");
-					}
-				}						
-			}
+			  // add vertex positions
+			  if (mesh_access[0] >=0 ) {				
+				  getGLTFBuffer ( model, mesh_access[0], buf, len, cnt, csz, bmin, bmax);
+				  verts = cnt;
+				  mesh->MemcpyBuffer (BVERTPOS, buf, len, verts );
+				  for (int v=0; v < verts; v++) {
+					  pos = *mesh->GetVertPos(v);
+					  mesh->SetVertPos ( v, pos );
+					  if (pos < bmin || pos > bmax) {
+						  dbgprintf ( "GLTF Read ERROR: Pos buffer corrupt. Pos outside bounds.\n");
+					  }
+				  }						
+			  }
 
-			// add vertex normals
-			if (mesh_access[1] >= 0) {
-				getGLTFBuffer(model, mesh_access[1], buf, len, cnt, csz, bmin, bmax);
-				mesh->AddBuffer (BVERTNORM, "norm", sizeof(Vec3F), 1);
-				mesh->MemcpyBuffer (BVERTNORM, buf, len, cnt);
-			}						
+			  // add vertex normals
+			  if (mesh_access[1] >= 0) {
+				  getGLTFBuffer(model, mesh_access[1], buf, len, cnt, csz, bmin, bmax);
+				  mesh->AddBuffer (BVERTNORM, "norm", sizeof(Vec3F), 1);
+				  mesh->MemcpyBuffer (BVERTNORM, buf, len, cnt);
+			  }					
 
-			// add face indices
-			if (mesh_indices >= 0) {
-				getGLTFBuffer(model, mesh_indices, buf, len, cnt, csz, bmin, bmax);
-				if (csz != sizeof(xref)) {
-					tris = cnt / 3;
-					if (csz==2) {
-						// repack unsigned short into int		
-						mesh->ExpandBuffer ( BFACEV3, tris );						
-						uint16_t* indices = reinterpret_cast<uint16_t*>(buf);
-						for (int i=0; i < tris; i++ ) {							
-							mesh->SetFace3 (i, indices[3*i], indices[3*i+1], indices[3*i+2] );							
-						}
-						mesh->ReserveBuffer ( BFACEV3, tris );
-					} 
-				} else {
-          tris = cnt / 3;
-					mesh->MemcpyBuffer (BFACEV3, buf, len, tris );					
-				}				
-			}
+        // add tex coords
+        if (mesh_access[2] >= 0) {
+          getGLTFBuffer(model, mesh_access[2], buf, len, cnt, csz, bmin, bmax);
+          mesh->AddBuffer(BVERTTEX, "tex", sizeof(Vec2F), 1);
+          mesh->MemcpyBuffer(BVERTTEX, buf, len, cnt);
+        }
+
+			  // add face indices
+			  if (mesh_indices >= 0) {
+				  getGLTFBuffer(model, mesh_indices, buf, len, cnt, csz, bmin, bmax);
+				  if (csz != sizeof(xref)) {
+					  tris = cnt / 3;
+					  if (csz==2) {
+						  // repack unsigned short into int		
+						  mesh->ExpandBuffer ( BFACEV3, tris );						
+						  uint16_t* indices = reinterpret_cast<uint16_t*>(buf);
+						  for (int i=0; i < tris; i++ ) {							
+							  mesh->SetFace3 (i, indices[3*i], indices[3*i+1], indices[3*i+2] );							
+						  }
+						  mesh->ReserveBuffer ( BFACEV3, tris );
+					  } 
+				  } else {
+            tris = cnt / 3;
+					  mesh->MemcpyBuffer (BFACEV3, buf, len, tris );					
+				  }				
+			  }
 	
-			dbgprintf("  Loaded: asset %d = %s (Amsh), vert %d, tri %d\n", obj->getID(), name.c_str(), verts, tris );
+			  dbgprintf("  Loaded: asset %d = %s (Amsh), vert %d, tri %d\n", obj->getID(), name.c_str(), verts, tris );
+      }
 		}
 
 
@@ -808,24 +873,35 @@ void Scene::CreateSceneDefaults ()
 		CreateSceneDefaults ();
  
 
-		// Load nodes (mesh instances / transforms)
+		// Load nodes (mesh instances / transforms)    
 		for (int n = 0; n < model.nodes.size(); n++) {
 
 			name = model.nodes[n].name;
-			tinygltf::Node& node = model.nodes[n];
-			int mesh_id = node.mesh;	
-			
-			if ( mesh_id >= 0 ) {
+			tinygltf::Node& node = model.nodes[n];    
+			if ( node.mesh >= 0 ) {
 
-				mesh_name = model.meshes[ mesh_id ].name;	  
+        // set mesh name input
+        gmesh = &model.meshes[node.mesh];
 
-				Transform* xform = dynamic_cast<Transform*>(CreateObject('tfrm', "T_" + name));		
-				xform->SetInput("material", "BasicMtl");
-				xform->SetInput("mesh", mesh_name);	
+        // create transform for each primitive
+        Transform* xform;
+        for (int p=0; p < gmesh->primitives.size(); p++) {
 
-				Matrix4F mtx = getGLTFWorldTransform(model, n);				
-				mtx.ReverseTRS ( pos, rot, scal );
-				xform->SetXform ( pos, rot, scal );
+          mtl_id = getGLTFMeshMtl(gmesh, p);
+  
+          if (mtlNames[mtl_id].find("TRANSP")==std::string::npos) {
+
+            xform = dynamic_cast<Transform*>(CreateObject('tfrm', "T_" + name + iToStr(p) ));
+            xform->SetInput( "mesh", gmesh->name + iToStr(p) );
+
+            // set material name input                  
+			  	  xform->SetInput("material", mtlNames[mtl_id] );
+
+				    Matrix4F mtx = getGLTFWorldTransform(model, n);				
+				    mtx.ReverseTRS ( pos, rot, scal );
+				    xform->SetXform ( pos, rot, scal );
+          }
+        }
       }
 
 		}		
@@ -897,7 +973,7 @@ bool Scene::LoadScene ( std::string fname, int w, int h )
 				obj->SetPos ( strToVec3(args[0], ';') );
 
 			} else if (cmd.compare("xform") == 0) {						// xform: <x,y,z>, <sx,sy,sz>, <tx,ty,tz>
-				ParseArgs(value, args);
+				obj->ParseArgs(value, args);
 				Vec3F p, s, r;				
 				p = strToVec3(args[0], ';');
 				s = strToVec3(args[1], ';');
@@ -910,15 +986,17 @@ bool Scene::LoadScene ( std::string fname, int w, int h )
 				obj->SetTransform ( p, s, r );
 
 			} else if ( cmd.compare("param")==0) {						// param: {name}, {value}
-				ParseArgs(value, args);
-				for (int k=0; k < args.size()-1; k++) 
-					obj->SetParam ( args[0], args[k+1], ';', k );
+
+        // create/set one or more params on object
+        obj->FindOrCreateParams ( value, ';' );				
 
 			} else if ( cmd.compare("time")==0) {						// time: <start, end, 0>
-				ParseArgs(value, args);
+
+				obj->ParseArgs(value, args);
 				obj->SetTimeRange ( strToVec3(args[0], ';') );
+
 			} else {													// other command
-				ParseArgs ( value, args );
+				obj->ParseArgs ( value, args );
 				if ( !obj->RunCommand ( cmd, args ) ) {
 					dbgprintf ( "LINE %d: Command not found '%s'\n", lnum, cmd.c_str() );
 					exit(-7);
@@ -964,8 +1042,16 @@ bool Scene::LoadScene ( std::string fname, int w, int h )
 
 bool Scene::Load(std::string fname, int w, int h)
 {
-	// Load scene dispatcher
+  // Initialize Scene
 
+  // Default image is color_white (id=0), Aimg
+  Object* obj = gAssets.FindOrLoadObject( "color_white" );
+  if (obj == 0x0) {
+    dbgprintf("**** ERROR: Default object color_white is required.\n" );    
+    return false;
+  }
+
+	// Load scene dispatcher
 	bool ret = false;
 	std::string path, name, ext;
 	getFileParts(fname, path, name, ext);

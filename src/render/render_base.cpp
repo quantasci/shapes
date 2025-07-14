@@ -166,6 +166,11 @@ void RenderBase::ResolveTexture ( Vec8S* texids )
 			// texture requested. check if unresolved with opengl
 			if ( gl == NULL_NDX ) {		
 				obj = gAssets.getObj( tid );
+        if (obj->getType() != 'Aimg') {
+          dbgprintf ("ERROR: Texture has same name as another object. %s\n", obj->getName().c_str() );
+          return;
+        }
+
 				gl = obj->getRIDs().x;
 				if (obj != 0x0) {
 					// resolve GLID

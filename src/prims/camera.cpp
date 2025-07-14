@@ -161,7 +161,7 @@ void Camera::AddKey (float time)
 	to = cam3d.getToPos ();
 	dof = cam3d.getDOF ();
 
-	SetParam ( keyname, fToStr(time), ',', 0 );			// creates a new param
+	FindOrCreateParam ( keyname, fToStr(time), ',', 0 );			// creates a new param
 	SetParam ( keyname, angs, 1 );
 	SetParam ( keyname, from, 2 );
 	SetParam ( keyname, to, 3 );

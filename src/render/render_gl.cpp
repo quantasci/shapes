@@ -166,9 +166,9 @@ void RenderGL::Initialize ()
 	csm_enable = true;
 	csm_num_splits = 4;				// CSM splits
 	//csm_depth_size = 16384;		// CSM res
-	//csm_depth_size = 8192;			// CSM res
-	csm_depth_size = 4096;			// CSM res
-	csm_split_weight = 0.7;			// CSM split weight
+	csm_depth_size = 8192;			// CSM res
+	//csm_depth_size = 4096;			// CSM res
+	csm_split_weight = 0.5;			// CSM split weight
 
 	shad_csm_pass = false;
 
@@ -795,7 +795,7 @@ float RenderGL::CSMApplyCropMatrix(frustum& f)
 
   // *NOTE*
   // work around for minZ/maxZ padding each cascade near/far to include all shadow casters
-  float zPadding = 20.0f;
+  float zPadding = 2.0f;
   minZ -= zPadding;
   maxZ += zPadding;
   if (minZ < 0.1f) minZ = 0.1f;
@@ -1545,6 +1545,10 @@ int RenderGL::UpdateMaterial ( Object* obj )
 	Vec8S texids;	
 	texids = Vec8S( mtl->getParamV4( M_TEXIDS ), NULL_NDX );
 
+  if (texids.x == 78) {
+    bool stop=true;
+   }
+
 	ResolveTexture ( &texids );
 	
 	//--- debugging material textures
@@ -1603,7 +1607,7 @@ void RenderGL::UpdateMaterials ()
 		if ( mMatBuffer == NULL_NDX ) {
 			glGenBuffers ( 1, &mMatBuffer );	
 			glBindBuffer ( GL_UNIFORM_BUFFER, mMatBuffer );	
-			int mat_max = 64;				// pre-allocate material pool
+			int mat_max = 128;				// pre-allocate material pool - maximum number
 			glBufferStorage ( GL_UNIFORM_BUFFER, mat_max * sizeof(RMaterial), nullptr, GL_MAP_WRITE_BIT );	 // resize buffer
 			CHECK_GL ( "glBufferStorage (materials)", mbDebug);
 		}	

@@ -188,7 +188,6 @@ Object* Object::getInputCheckType (std::string input_name, objType chktype )
 	return 0x0;	
 }
 
-
 int Object::getInputNdx(std::string input_name)
 {
 	// SLOW
@@ -198,7 +197,6 @@ int Object::getInputNdx(std::string input_name)
 	}
 	return OBJ_NULL;
 }
-
 
 
 void Object::SetInput(std::string input_name, std::string asset_name)
@@ -213,9 +211,6 @@ void Object::SetInput(std::string input_name, std::string asset_name)
 		dbgprintf("WARNING: Input for %s is unconnected.\n", input_name.c_str() );
 		mInputs[ndx].value = -1;
 		return;
-	}
-	if (input_name.compare("icon")==0) {
-		bool stop=true;
 	}
 
 	// Get the object to connect
@@ -486,18 +481,66 @@ void Object::AddParam(int slot, std::string name, std::string types)
 
 	mParams->AddParam(slot, name, types);
 }
-void Object::SetParam (std::string name, std::string val, uchar vecsep, int k)
+int Object::ParseArgs(std::string value, std::vector<std::string>& args)
+{
+  // change commas inside vectors to semi-colons
+  int sub = 0;
+  for (int n = 0; n < value.length(); n++) {
+    if (value.at(n) == '<') sub++;
+    if (value.at(n) == '>') sub--;
+    if (value.at(n) == ',' && sub != 0) value.at(n) = ';';
+  }
+
+  // parse arguments
+  args.clear();
+  std::string arg, rest;
+  while (strSplitLeft(value, ",", arg, rest)) {
+    args.push_back(strTrim(arg));
+    value = rest;
+  }
+  arg = value;
+  args.push_back(strTrim(arg));
+  return args.size();
+}
+
+
+//--------------------- SetParam by name
+//
+
+// create/set multiple params
+void Object::FindOrCreateParams (std::string value, uchar sep)
+{
+  std::vector<std::string> args;  
+  ParseArgs ( value, args);
+
+  for (int k = 0; k < args.size() - 1; k++) {
+    FindOrCreateParam ( args[0], args[k+1], sep, k);
+  }
+}
+
+// create/set single param
+void Object::FindOrCreateParam (std::string name, std::string val, uchar vecsep, int k)
 {
 	if ( mParams==0x0) return;					// object has no params
 	int slot = mParams->FindOrCreateParam( name, val, vecsep );
 	if (slot == -1) return;						// named param not found
 	mParams->SetParam( slot, val, vecsep, k );
 }
+void Object::SetParam(std::string name, float val, int k)
+{
+  if (mParams == 0x0) return;					// object has no params
+  int slot = mParams->FindParam(name);
+  if (slot == -1) return;						// named param not found
+  mParams->SetParamF(slot, k, val);
+}
 void Object::SetParam(std::string name, Vec3F val, int k)
 {
-	if (mParams == 0x0) return;					// object has no params
-	mParams->SetParam(name, val, k );
+  if (mParams == 0x0) return;					// object has no params
+  mParams->SetParam(name, val, k);
 }
+
+//--------------------- SetParam by slot
+//
 void Object::SetParam( int slot, Vec3F val, int k)
 {
 	if (mParams == 0x0) return;					// object has no params

@@ -195,7 +195,7 @@ Shapes* Module::GenerateVariant (Vec3I v, std::string vname, int rnd, Vec3I numv
 				key = params->getParamName (i);					// get param from parameter space
 				val = params->getParamValueAsStr ( i );			// get param value
 				pid = obj->getParamByName ( key );				// find the param on target object
-				if ( pid != -1) obj->SetParam ( key, val );		// set the param (only if found)
+				if ( pid != -1) obj->FindOrCreateParam ( key, val );		// set the param (only if found)
 			}
 		}
 	}

@@ -108,7 +108,7 @@
 		virtual bool Select3D ( int w, Vec4F& sel, std::string& name, Vec3F orig, Vec3F dir ) {return false;}
 		virtual void Adjust3D ( int w, Vec4F& sel ) {};
 		virtual Vec3F getPosition() { return Vec3F(0, 0, 0); }		
-		virtual Vec3F getStats() { return Vec3F(0,0,0); }
+		virtual Vec3F getStats() { return Vec3F(0,0,0); }    
 
 		void		Build();
 
@@ -204,14 +204,18 @@
 		int			getNumParam ();
 		std::string	getParamName (int i);
 		std::string getParamValueAsStr (int i );
+    int     ParseArgs(std::string value, std::vector<std::string>& args);
+    void		FindOrCreateParams(std::string value, uchar sep = ';');
+    void		FindOrCreateParam(std::string name, std::string val, uchar vecsep = ',', int k = 0);
 
 		uchar		getParamType(int slot);
 		int			getParamByName ( std::string name );
 		int			GetParamArray ( std::string base_name, std::vector<int>& list );
 
-		void		SetParam(std::string name, std::string val, uchar vecsep = ',', int k=0);
-		void		SetParam(int slot, Vec3F val, int k=0);
 		void		SetParam(std::string name, Vec3F val, int k=0);
+    void    SetParam(std::string name, float val, int k=0);
+    
+    void		SetParam(int slot, Vec3F val, int k = 0);
 		void		SetParamI(int slot, int i, int val);
 		void		SetParamF(int slot, int i, float val);
 		void		SetParamI3(int slot, int i, Vec3I val);

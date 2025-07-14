@@ -37,16 +37,16 @@ void Material::Define (int x, int y)
 	AddParam( M_SHADOW_BIAS,	"shadow_bias",	"f");	SetParamF	( M_SHADOW_BIAS, 0, 0.01f );
 
 	AddParam( M_AMB_CLR,			"amb_color",	"3" );	SetParamV3	( M_AMB_CLR, 0, Vec3F(0, 0, 0) );
-	AddParam( M_DIFF_CLR,			"diff_color",	"3" );	SetParamV3	( M_DIFF_CLR, 0, Vec3F(0.7,0.7,0.8) );
+	AddParam( M_DIFF_CLR,			"diff_color",	"3" );	SetParamV3	( M_DIFF_CLR, 0, Vec3F(0.9,0.9,0.9) );
 	AddParam( M_SPEC_CLR,			"spec_color",	"3" );	SetParamV3	( M_SPEC_CLR, 0, Vec3F(0.3,0.3,0.3) );
 	AddParam( M_SPEC_POWER,		"spec_power",	"f" );	SetParamF	( M_SPEC_POWER, 0, 40 );
-	AddParam( M_ENV_CLR,			"env_color",	"3" );	SetParamV3	( M_ENV_CLR, 0, Vec3F(0.2,0.2,0.2) );
+	AddParam( M_ENV_CLR,			"env_color",	"3" );	SetParamV3	( M_ENV_CLR, 0, Vec3F(0.1,0.1,0.1) );
 
-	AddParam( M_REFL_CLR,			"refl_color",	"3" );	SetParamV3	( M_REFL_CLR, 0, Vec3F(0.2,0.2,0.2) );
+	AddParam( M_REFL_CLR,			"refl_color",	"3" );	SetParamV3	( M_REFL_CLR, 0, Vec3F(0,0,0) );
 	AddParam( M_REFL_WIDTH,		"refl_width",	"f" );	SetParamF	( M_REFL_WIDTH, 0, 6.0 );
 	AddParam( M_REFL_BIAS,		"refl_bias",	"f" );	SetParamF	( M_REFL_BIAS, 0, 0.01f );
 	
-	AddParam( M_REFR_CLR,			"refr_color",	"3" );	SetParamV3	( M_REFR_CLR, 0, Vec3F(0.3,0.3,0.3) );
+	AddParam( M_REFR_CLR,			"refr_color",	"3" );	SetParamV3	( M_REFR_CLR, 0, Vec3F(0.0,0.0,0.0) );
 	AddParam( M_REFR_WIDTH,		"refr_width",	"f" );	SetParamF	( M_REFR_WIDTH, 0, -1.0 );		
 	AddParam( M_REFR_BIAS,		"refr_bias",	"f" );	SetParamF	( M_REFR_BIAS, 0, 0.05f );
 	AddParam( M_REFR_IOR,			"refr_ior",		"f" );	SetParamF	( M_REFR_IOR, 0, 1.05f );

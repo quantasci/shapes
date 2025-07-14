@@ -38,18 +38,19 @@
 		void Clear();
 		void RegisterTypes();
 		std::string getRevTypeMap ( objType ot );
-		objType		getObjTypeFromName (std::string name);
-		objType		getObjTypeFromExtension ( std::string ext );						
-		int			AddAssetPath ( std::string path );		
+    objType	getObjTypeFromName (std::string name); 
+    objType	getObjTypeFromExtension ( std::string ext );						
+    std::string AddAsset(std::string filestr, bool bChk = false);
+    int     AddAssetPath ( std::string path);		
 
 		// Creation
 		Object*		AddObject ( objType otype, std::string name );
 		int			DeleteObject ( Object* obj );
-		bool		AddObjectFromFile (objType otype, std::string name, std::string fname, Object*& obj);
+		bool		LoadObjectFromFile (objType otype, std::string name, std::string fname, Object*& obj);
 		int			LoadAllAssets ();								// load all from asset paths
-		Object*		LoadObject ( std::string asset_name );			// load specific object
-		Object*		FindObject ( std::string asset_name );
-		Object*		FindOrLoadObject ( std::string asset_name );	// lazy loading		
+		Object*	LoadObject ( std::string asset_name );			// load specific object
+		Object*	FindObject ( std::string asset_name );
+		Object*	FindOrLoadObject ( std::string asset_name );	// lazy loading		
 		bool		SaveObject ( Object* obj, FILE* fp );
 
 
@@ -69,8 +70,8 @@
 		//int			getRIDByType ( std::string name, objType atyp );
 		
 	private:
-		std::vector<std::string> mAssetPaths;	// locations to search for assets
-		std::vector<std::string> mAssetFiles;	// list of file names
+		std::vector<std::string> mAssetPaths;	  // locations to search for assets
+		std::vector<std::string> mAssetFiles;	  // list of file names
 
 		std::vector<Object*>	mObjList;		// list of objects
 

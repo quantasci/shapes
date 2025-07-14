@@ -55,7 +55,7 @@ struct Material {
 };
 layout(std140) uniform MATERIAL_BLOCK
 {
-	Material		mat[64];
+	Material		mat[128];
 };
 // textures data block
 layout(std140) uniform TEXTURE_BLOCK
