@@ -166,9 +166,9 @@ void RenderGL::Initialize ()
 	csm_enable = true;
 	csm_num_splits = 4;				// CSM splits
 	//csm_depth_size = 16384;		// CSM res
-	csm_depth_size = 8192;			// CSM res
-	//csm_depth_size = 4096;			// CSM res
-	csm_split_weight = 0.5;			// CSM split weight
+	//csm_depth_size = 8192;			// CSM res
+	csm_depth_size = 4096;			// CSM res
+	csm_split_weight = 0.7;			// CSM split weight
 
 	shad_csm_pass = false;
 
@@ -778,6 +778,7 @@ float RenderGL::CSMApplyCropMatrix(frustum& f)
 	Matrix4F split_crop;
 	Matrix4F split_mvp;
 
+
 	float maxX = -1e10f, maxY = -1e10f;
 	float minX =  1e10f, minY =  1e10f;
 	float minZ, maxZ;
@@ -795,7 +796,7 @@ float RenderGL::CSMApplyCropMatrix(frustum& f)
 
   // *NOTE*
   // work around for minZ/maxZ padding each cascade near/far to include all shadow casters
-  float zPadding = 2.0f;
+  float zPadding = 40.0f;
   minZ -= zPadding;
   maxZ += zPadding;
   if (minZ < 0.1f) minZ = 0.1f;

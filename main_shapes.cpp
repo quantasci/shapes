@@ -152,6 +152,8 @@ bool Sample::init ()
 	m_rendergl_pick = -1;
 	
 	mAng = 0;
+   
+  int s = sizeof(Shape);
 
 	mouse_plane = 3;			// height
 
@@ -567,8 +569,8 @@ void Sample::MoveCamera ( char how, Vec3F amt )
 				/* Quaternion q, t;
 				q.fromAngleAxis( amt.x, Vec3F(0, 0, 1));
 				t.fromAngleAxis( amt.y, Vec3F(1, 0, 1)); */
-				lgt->pos.x += -amt.x * 10.0;
-				lgt->pos.z += -amt.y * 10.0;
+				lgt->pos.x += -amt.x * 50.0;
+				lgt->pos.z += -amt.y * 50.0;
 				mRenderMgr.UpdateLights();
 			}
 			lgts->Update();		// update lights
@@ -772,7 +774,7 @@ void Sample::startup ()
 		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_LEAK_CHECK_DF);
 	#endif
 
-	appStart ( "Shapes (c) 2010-2025", "Shapes (c) 2010-2025", w, h, 4, 2, 16, DEBUG_GL );
+	appStart ( "Shapes (c) 2010-2025", "Shapes (c) 2010-2025", w, h, 4, 2, 8, DEBUG_GL );
 
 	printf ("SHAPES (c) Quanta Sciences 2010-2025\n");
 	printf ("by Rama C. Hoetzlein, ramakarl.com\n");

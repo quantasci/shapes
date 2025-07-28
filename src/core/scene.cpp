@@ -545,18 +545,19 @@ void Scene::CreateSceneDefaults ()
 	if (FindByType('Algt') == 0x0) {
 		LightSet* ls = (LightSet*) CreateObject('lgts', "Lights");
     // light[#], pos, target, ambient, diffuse, shadow        
-    ls->FindOrCreateParams( "light, <0,5,0>, <-.5,0,0>, <0,0,0>, <.7,.7,.7>, <0,0,0>");
-    ls->FindOrCreateParams( "light[2], <0,5,0>, <0,0,0>, <0,0,0>, <.6,.6,.6>, <0,0,0>");    
-    //ls->FindOrCreateParams( "light[1], <-5,8,-20>, <0,0,0>, <0,0,0>, <.4,.4,.5>, <0,0,0>");    
-    //ls->FindOrCreateParams( "light[2], < 5,8, 10>, <0,0,0>, <0,0,0>, <.5,.4,.4>, <0,0,0>");
-    //ls->FindOrCreateParams( "light[3], <-5,8,  0>, <0,0,0>, <0,0,0>, <1,.8,1>, <0,0,0>");
-    //ls->FindOrCreateParams( "light[4], < 5,8,-10>, <0,0,0>, <0,0,0>, <1,1,1>, <0,0,0>");
+    //ls->FindOrCreateParams( "light, <0,10,0>, <-.5,0,0>, <0,0,0>, <.8,.8,.8>, <0,0,0>");
+    //ls->FindOrCreateParams( "light[2], <0,10,1>, <0,0,0>, <0,0,0>, <.6,.6,.6>, <0,0,0>");    
+    //ls->FindOrCreateParams( "light[3], <1,10,0>, <0,0,0>, <0,0,0>, <.7,.7,.7>, <0,0,0>");
+    ls->FindOrCreateParams( "light[1], <-5,8,-20>, <0,0,0>, <0,0,0>, <.4,.4,.5>, <0,0,0>");    
+    ls->FindOrCreateParams( "light[2], < 5,8, 10>, <0,0,0>, <0,0,0>, <.5,.4,.4>, <0,0,0>");
+    ls->FindOrCreateParams( "light[3], <-5,8,  0>, <0,0,0>, <0,0,0>, <1,.8,1>, <0,0,0>");
+    ls->FindOrCreateParams( "light[4], < 5,8,-10>, <0,0,0>, <0,0,0>, <1,1,1>, <0,0,0>");
 	}
 
 	// Create default cameras
 	if (FindByType('camr') == 0x0) {
 		obj = CreateObject('camr', "Camera");
-    obj->SetParamV3(C_NEARFAR, 0, Vec3F(.1,100,0) );
+    obj->SetParamV3(C_NEARFAR, 0, Vec3F(1,500,0) );
 		obj->SetParamF(C_FOV, 0, 40.0);
 	}
 
@@ -665,9 +666,9 @@ void Scene::CreateSceneDefaults ()
 		// Check if this is a root node
 		for (size_t i = 0; i < model.scenes.size(); ++i) {
 			for (int root : model.scenes[i].nodes) {
-				if (root == nodeIndex) {
+				if (root == nodeIndex) { 
 					Matrix4F s;
-					s.Scale ( 1,1,1 );
+					s.Scale ( 2, 2, 2 );
 					return s * local;			 // Root node: no parents
 				}
 			}
@@ -758,13 +759,15 @@ void Scene::CreateSceneDefaults ()
         obj->SetParam("diff_color", Vec3F(d, d, d));
       }
       // apply roughness/metalic
-      float r = clamp((0.04 + gmtl->pbrMetallicRoughness.metallicFactor) * (1.0 - gmtl->pbrMetallicRoughness.roughnessFactor), 0, 1);
-      r += 0.02;
+      //float r = 0.01 + clamp((0.04 + gmtl->pbrMetallicRoughness.metallicFactor) * (1.0 - gmtl->pbrMetallicRoughness.roughnessFactor), 0, 1);      
+      float r = clamp(1.0 - gmtl->pbrMetallicRoughness.roughnessFactor, 0, 1);
+      r *= r;
       obj->SetParam("refl_color", Vec3F(r, r, r));
-      float e = (1 - r) * (1 - r);
-      //obj->SetParam( "env_color",  Vec3F(e,e,e) );
-      obj->SetParam("env_color", Vec3F(.02, .02, .02));
-      obj->SetParam("spec_power", float(1 + r * 10.0f));
+
+      obj->SetParam( "env_color", Vec3F(.02, .02, .02)); 
+     
+      r = 1.0 - gmtl->pbrMetallicRoughness.roughnessFactor;
+      obj->SetParam("spec_power", float(1 + r * 1000.0f));
 
       // apply diffuse texture
       tex_name = getGLTFTexture ( model, gmtl->pbrMetallicRoughness.baseColorTexture.index );      

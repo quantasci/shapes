@@ -153,7 +153,9 @@ float shadowCoeff ( float ndotl, float lwid, vec3 N, vec3 L )
 	shadow_coord.w = shadow_coord.z;											// R value = depth value of the current sample point (vviewpos) in lights view
 	shadow_coord.z = float(index);												// layer (split)																
   //return shadow2DArray(shadowTex, shadow_coord).x;		// [optional] single sample only (fast)
-  float bias = calcShadowBias(N, L, 0.0001, 0.001);
+  
+  //float bias = calcShadowBias(N, L, 0.0001, 0.001);
+  float bias = calcShadowBias(N, L, 0.00001, 0.0001);
 	  
 	vec2 randomRot = randomRotation(gl_FragCoord.xy);
 
@@ -252,7 +254,7 @@ void main ()
     R = reflect(-lgtdir, vnormal);
 		spec = mat[m].specclr.xyz * pow( max(0.0f, dot(R, V)), mat[m].surfp.x );
 		diff = mat[m].diffclr.xyz * max(0.0f, dot(lgtdir, vnormal) );
-		clr += light[i].diffclr.xyz * (texclr.xyz * diff + spec) / (dist*dist/20.0) ;
+		clr += light[i].diffclr.xyz * (texclr.xyz * diff + spec) / (dist*dist/100.0) ;
 	}
 	
 	// environment probe lighting	
