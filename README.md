@@ -46,34 +46,21 @@ Pre-requisites:
 * OptiX 6.5 [optional]
 * NVIDIA CUDA Toolkit 10.0+ [optional]
 
-## Installation
+## How to Build
+**Updated Nov 2025**<br>
+Build with cmake is now simpler and faster.<br>
+Libmin dependent code is directly compiled into the project (no shared or static libs).<br>
+Steps:<br>
+1. Clone this Shapes repo<br>
+2. Clone <a href="https://github.com/ramakarl/libmin">libmin</a> as a sibling folder<br>
+<pre>
+\codes
+ ├── \shapes
+ └── \libmin
+</pre>
+3. Run cmake or cmake-gui on the Shapes cmake.<br>
 
-Install by cloning and building Libmin, then cloning and building Shapes.<br>
-Steps to Install:
-```
-> mkdir codes
-> git clone https://github.com/quantasci/libmin
-> cd libmin
-> ./build.sh
-> cd ..
-> git clone https://github.com/quantasci/shapes
-> cd shapes
-> ./build.sh
->
-> ./run.sh
-```
-The last command will run the scene_basic.txt example in a window.<br>
-
-Typical installation expects that the libmin and shapes repos are sibling folders. A separate folder for /build will be created so that 
-the repository trees can remain clean for code modifications. This is the recommended folder structure. 
-```
-/codes
-  |___ /libmin        Libmin repository
-  |___ /shapes        Shapes repository
-  |___ /build         
-        |___/libmin   Libmin build products and libmin.so library
-        |___/shapes   Shapes build products and binary
-```
+See <a href="https://github.com/ramakarl/libmin">libmin</a> for more details.
 
 ## Running 
 Several simple samples are provided in the /shapes/assets folder:
