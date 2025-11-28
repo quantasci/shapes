@@ -31,21 +31,6 @@ Features of the Shapes rendering engine include:
 * Trees and Forests (pro version)
 * Geospatial Data, LiDAR and DEM (pro version)
 
-## Platforms & System Requirements
-Shapes was designed to be very lightweight and minimal. **The default configuration only requires OpenGL and Libmin library**. 
-Build flags enable support for OptiX 6.5 for pure raytracing, and NVIDIA CUDA Toolkit for particle system acceleration.
-
-Platforms:
-* Windows 10/11 x64
-* Linux
-* Android
-
-Pre-requisites:
-* OpenGL ES3
-* Libmin Library
-* OptiX 6.5 [optional]
-* NVIDIA CUDA Toolkit 10.0+ [optional]
-
 ## How to Build
 **Updated Nov 2025**<br>
 Build with cmake is now simpler and faster.<br>
