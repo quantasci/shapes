@@ -597,13 +597,13 @@ std::string Object::getParamStr(int slot, int i)	{ return mParams->getParamStr(s
 
 //-------- 3D interaction
 
-#ifdef USE_WIDGETS
+#ifdef BUILD_WIDGETS
 	#include "widget.h"
 #endif
 
 void Object::AssignShapeToWidget3D ( Shape* s, int w, Vec3I sel )
 {
-	#ifdef USE_WIDGETS
+	#ifdef BUILD_WIDGETS
 		Widget3D* x = gInterface->getWidget3D( w );
 		x->sel = sel;
 		if ( s==0x0 ) return;
@@ -616,7 +616,7 @@ void Object::AssignShapeToWidget3D ( Shape* s, int w, Vec3I sel )
 
 void Object::AssignWidgetToShape3D ( Shape* s, int w, std::string& name )
 {
-	#ifdef USE_WIDGETS
+	#ifdef BUILD_WIDGETS
 		Widget3D* x = gInterface->getWidget3D( w );		
 		s->pos = x->pos;
 		s->scale = x->scale;
@@ -627,7 +627,7 @@ void Object::AssignWidgetToShape3D ( Shape* s, int w, std::string& name )
 }
 Vec3I Object::GetWidgetSel ( int w )
 {
-	#ifdef USE_WIDGETS
+	#ifdef BUILD_WIDGETS
 		Widget3D* x = gInterface->getWidget3D( w );
 		return x->sel;
 	#else
@@ -638,7 +638,7 @@ Vec3I Object::GetWidgetSel ( int w )
 
 bool Object::IntersectShape3D ( Shape* s, float x, float y )
 {
-	#ifdef USE_WIDGETS
+	#ifdef BUILD_WIDGETS
 		// get oriented bounding box
 		return gInterface->IntersectBox3D( s->pos, s->pivot, s->scale, s->rot, x, y );
 	#else

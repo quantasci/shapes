@@ -23,7 +23,7 @@
 using namespace glib;
 
 
-#ifdef USE_CUDA
+#ifdef BUILD_CUDA
 	#include "common_cuda.h"
 #endif
 
@@ -75,7 +75,7 @@ Vec3I Points::getCell ( int c )
 //
 Points::Points ()
 {
-	#ifdef USE_CUDA	
+	#ifdef BUILD_CUDA	
 		m_bGPU = true;		// use GPU pathway
 	#else
 		m_bGPU = false;
@@ -94,7 +94,7 @@ Points::Points ()
 
 	m_rand.seed ( 247 );
 
-	#ifdef USE_CUDA
+	#ifdef BUILD_CUDA
 		m_Module = 0;
 		for (int n=0; n < FUNC_MAX; n++ ) m_Func[n] = (CUfunction) -1;	
 	#endif
@@ -104,7 +104,7 @@ Points::~Points()
 {
 	Clear ();
 
-	#ifdef USE_CUDA
+	#ifdef BUILD_CUDA
 	if (m_Module != 0) cuCheck(cuModuleUnload(m_Module), "~FluidSystem()", "cuModuleUnload", "m_Module", m_bDebug);
 	#endif
 }
@@ -121,7 +121,7 @@ void Points::LoadKernel ( int fid, std::string func )
 {
 	char cfn[512];		strcpy ( cfn, func.c_str() );
 	
-	#ifdef USE_CUDA
+	#ifdef BUILD_CUDA
 	if ( m_Func[fid] == (CUfunction) -1 )
 		cuCheck ( cuModuleGetFunction ( &m_Func[fid], m_Module, cfn ), "LoadKernel", "cuModuleGetFunction", cfn, m_bDebug );	
 	#endif
@@ -148,7 +148,7 @@ void Points::Setup ( Vec3F bmin, Vec3F bmax, float dt, float sim_scale, float gr
 	m_Params.bound_max = bmax;
 
 	// Static points initalization (not assuming advection)
-	#ifdef USE_CUDA
+	#ifdef BUILD_CUDA
 		cuCheck ( cuModuleLoad ( &m_Module, "points.ptx" ), "LoadKernel", "cuModuleLoad", "points.ptx", m_bDebug);
 
 		// Assign DataX buffers to GPU
@@ -164,7 +164,7 @@ void Points::Setup ( Vec3F bmin, Vec3F bmax, float dt, float sim_scale, float gr
 void Points::CommitParams()
 {
 	if ( m_bGPU ) {
-		#ifdef USE_CUDA			
+		#ifdef BUILD_CUDA			
 		cuCheck ( cuMemcpyHtoD ( m_cuParams, &m_Params,	sizeof(FParams_t) ), "FluidParamCUDA", "cuMemcpyHtoD", "cuFParams", m_bDebug);		// Transfer sim params to device
 		#endif
 	}
@@ -542,7 +542,7 @@ void Points::DebugPrint ( int i, int start, int disp)
 	
 	dat->Retrieve ( i );
 
-	#ifdef USE_CUDA
+	#ifdef BUILD_CUDA
 		dbgprintf ("---- cpu: %012llx, gpu: %012llx\n", dat->cpu(i), dat->gpu(i) );	
 	#else
 		dbgprintf ("---- cpu: %012llx\n", dat->cpu(i) );	
@@ -642,7 +642,7 @@ void Points::Draw ( int frame, Camera3D* cam, float rad )
 
 void Points::Advect_Init()
 {
-	#ifdef USE_CUDA
+	#ifdef BUILD_CUDA
 		LoadKernel ( FUNC_ADVANCE,			"advanceParticles" );
 		LoadKernel ( FUNC_GRAVITY,			"forceGravity" );
 	#endif
@@ -680,7 +680,7 @@ void Points::Advect_Init()
 void Points::Run_GravityForce (float factor)
 {
 	if ( m_bGPU ) {	
-		#ifdef USE_CUDA	
+		#ifdef BUILD_CUDA	
 		void* args[2] = { &m_Params.pnum, &factor };
 		cuCheck ( cuLaunchKernel ( m_Func[FUNC_GRAVITY],  m_Params.numBlocks, 1, 1, m_Params.numThreads, 1, 1, 0, NULL, args, NULL), "Points::Run_GravityForce", "cuLaunch", "FUNC_GRAVITY", m_bDebug);
 		#endif
@@ -711,7 +711,7 @@ void Points::Run_Advect ()
 
 	if ( m_bGPU ) {	
 
-		#ifdef USE_CUDA	
+		#ifdef BUILD_CUDA	
 
 		if (m_Points.Map(FPOS)) {			// cuda interop if needed
 			m_Points.Map(FVEL);
@@ -882,7 +882,7 @@ void Points::Accel_Init ()
 
 	m_Params.example =		2;	
 
-	#ifdef USE_CUDA
+	#ifdef BUILD_CUDA
 		// Acceleration kernels
 		LoadKernel ( FUNC_INSERT,			"insertParticles" );
 		LoadKernel ( FUNC_COUNTING_SORT,	"countingSortFull" );
@@ -999,7 +999,7 @@ void Points::Accel_RebuildGrid ()
 void Points::Accel_InsertParticles ()
 {
 	if ( m_bGPU ) {
-		#ifdef USE_CUDA
+		#ifdef BUILD_CUDA
 		// Reset all grid cells to empty	
 		cuCheck ( cuMemsetD8 ( m_Accel.gpu(AGRIDCNT), 0,	m_Params.gridTotal*sizeof(uint) ), "InsertParticlesCUDA", "cuMemsetD8", "AGRIDCNT", m_bDebug );
 		cuCheck ( cuMemsetD8 ( m_Accel.gpu(AGRIDOFF), 0,	m_Params.gridTotal*sizeof(uint) ), "InsertParticlesCUDA", "cuMemsetD8", "AGRIDOFF", m_bDebug );
@@ -1060,7 +1060,7 @@ void Points::Accel_PrefixScanParticles ()
 {
 	if ( m_bGPU ) {
 
-		#ifdef USE_CUDA
+		#ifdef BUILD_CUDA
 		// Prefix Sum - determine grid offsets
 		int blockSize = SCAN_BLOCKSIZE << 1;
 		int numElem1 = m_Params.gridTotal;		
@@ -1118,7 +1118,7 @@ void Points::Accel_PrefixScanParticles ()
 void Points::Accel_CountingSort ()
 {
 	if ( m_bGPU ) {
-		#ifdef USE_CUDA
+		#ifdef BUILD_CUDA
 
 		// Transfer particle data to temp buffers 
 		//  (required by algorithm, gpu-to-gpu copy, no sync needed)	
@@ -1154,7 +1154,7 @@ void Points::Fire_Init ( Points* pntsB )
 {
 	m_FIRE = true;
 
-	#ifdef USE_CUDA
+	#ifdef BUILD_CUDA
 		LoadKernel ( FUNC_SPREAD_FIRE,			"spreadFire" );
 		LoadKernel ( FUNC_ADVECT_FIRE,			"advectFire" );		
 	#endif
@@ -1181,7 +1181,7 @@ void Points::Run_Fire ( Points* pntsB, float time )
 	float fire_force = -0.0001;
 
 	if ( m_bGPU ) {	
-		#ifdef USE_CUDA			
+		#ifdef BUILD_CUDA			
 
 		float radius = 0.6;		
 
@@ -1409,7 +1409,7 @@ void Points::SPH_UpdateParams ()
 void Points::SPH_ComputePressure ()
 {
 	if ( m_bGPU ) {
-		#ifdef USE_CUDA
+		#ifdef BUILD_CUDA
 		void* args[1] = { &mNumPoints };
 
 		Map();
@@ -1474,7 +1474,7 @@ void Points::SPH_ComputePressure ()
 void Points::SPH_ComputeForce ()
 {
 	if ( m_bGPU ) {
-		#ifdef USE_CUDA
+		#ifdef BUILD_CUDA
 		void* args[1] = { &mNumPoints };
 
 		Map();
@@ -1572,7 +1572,7 @@ void Points::DEM_Init (Image* img)
 	m_DEM = true;
 	m_Terrain = img;
 
-	#ifdef USE_CUDA
+	#ifdef BUILD_CUDA
 		// DEM
 		LoadKernel ( FUNC_FORCE_TERRAIN,	"forceTerrain" );
 		LoadKernel ( FUNC_POINTS_TO_DEM,	"pointsToDEM" ); 
@@ -1585,7 +1585,7 @@ void Points::Run_DEMTerrainForce ()
 	if ( m_Terrain==0x0 || mNumPoints==0 || !m_DEM) return;
 
 	if ( m_bGPU ) {	
-		#ifdef USE_CUDA	
+		#ifdef BUILD_CUDA	
 		int tw = m_Terrain->GetWidth();
 		int th = m_Terrain->GetHeight();
 		
@@ -1615,7 +1615,7 @@ void Points::DEM_Smooth ( Image* img )
 	if ( !m_DEM) {dbgprintf("ERROR: DEM not started.\n"); exit(-2); }
 
 	if ( m_bGPU ) {
-		#ifdef USE_CUDA	
+		#ifdef BUILD_CUDA	
 		int tw = img->GetWidth();
 		int th = img->GetHeight();
 		CUtexObject imgR; CUsurfObject imgW;
@@ -1639,7 +1639,7 @@ void Points::DEM_PointsToDEM ( Image* img, bool over)
 	if ( !m_DEM) {dbgprintf("ERROR: DEM not started.\n"); exit(-2); }
 
 	if ( m_bGPU ) {
-		#ifdef USE_CUDA	
+		#ifdef BUILD_CUDA	
 		PERF_PUSH ("insert");		Accel_InsertParticles ();		PERF_POP();
 		PERF_PUSH ("prefix");		Accel_PrefixScanParticles();	PERF_POP();
 		PERF_PUSH ("count");		Accel_CountingSort ();			PERF_POP();					

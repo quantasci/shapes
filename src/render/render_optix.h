@@ -12,7 +12,7 @@
 // limitations under the License.
 //--------------------------
 
-#ifdef USE_OPTIX
+#ifdef BUILD_OPTIX
 
 #ifndef DEF_RENDER_OPTIX_H
 	#define DEF_RENDER_OPTIX_H

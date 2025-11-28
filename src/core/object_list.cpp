@@ -215,7 +215,7 @@ Object* ObjectList::AddObject ( objType otype, std::string name )
 	case 'psys':	obj = new PointPSys;	break;
 
 	// volumes
-	#ifdef USE_GVDB
+	#ifdef BUILD_GVDB
 	case 'Avol':	obj = new Volume;		break;		
 	case 'heat':	obj = new Heat;			break;		
 	#endif	
@@ -389,8 +389,7 @@ int ObjectList::AddAssetPath ( std::string path )
 	Directory* mDir;			// Directory listing
 	dir_list_element d;
 	std::string ext; 
-	std::string filter = "*.*";
-	objType otype;
+	std::string filter = "*.*";	
 	int ok = 0;
 	
 	// Load directory
@@ -399,7 +398,7 @@ int ObjectList::AddAssetPath ( std::string path )
 
 	if (path.at( path.length()-1) != getPathDelim() ) {
 		path += getPathDelim();
-	}
+	} 
 
 	mAssetPaths.push_back ( path );
 

@@ -13,6 +13,8 @@
 // limitations under the License.
 //--------------------------
 
+#include "string_helper.h"
+
 #include <GL/glew.h>
 #ifdef _WIN32
   #include <GL/wglew.h>
@@ -168,7 +170,7 @@ void RenderGL::Initialize ()
 	//csm_depth_size = 16384;		// CSM res
 	//csm_depth_size = 8192;			// CSM res
 	csm_depth_size = 4096;			// CSM res
-	csm_split_weight = 0.7;			// CSM split weight
+	csm_split_weight = 0.5;			// CSM split weight
 
 	shad_csm_pass = false;
 
@@ -418,7 +420,7 @@ void RenderGL::RenderVolume ( Object* vol, int depth_tex, int vol_tex )
 		dbgprintf ( "  OpenGL. ERROR: Unable to find lights for rendering.\n");
 		exit(-1);
 	}
-	#ifdef USE_CUDA
+	#ifdef BUILD_CUDA
 		Vec3I res = scn->getRes();
  		dynamic_cast<Volume*>(vol)->Render ( scn->getCamera3D(), lgts, res.x, res.y, vol_tex, depth_tex );
 	#endif
@@ -725,13 +727,18 @@ void RenderGL::CSMUpdateSplits (frustum f[MAX_SPLITS], float nd, float fd)
 {
 	float lambda = csm_split_weight;
 	float ratio = fd / nd;
-	f[0].neard = nd;
+	
+  float overlap = 1.05;     // 5% overlap
 
+  f[0].neard = nd;
 	for (int i = 1; i < csm_num_splits; i++)
 	{
-		float si = i / (float)csm_num_splits;
-		f[i].neard = lambda * (nd * powf(ratio, si)) + (1 - lambda) * (nd + (fd - nd) * si);
-		f[i - 1].fard = f[i].neard * 1.005f;
+		float si = (float) i / (float) csm_num_splits;
+    float logSplit = nd * powf(ratio, si);
+    float uniSplit = nd + (fd-nd) *si ;
+    float splitDist = lambda * logSplit + (1 - lambda) * uniSplit;		
+		f[i - 1].fard = splitDist * overlap;
+    f[i].neard = splitDist * overlap;
 	}
 	f[csm_num_splits - 1].fard = fd;
 }
@@ -739,13 +746,15 @@ void RenderGL::CSMUpdateSplits (frustum f[MAX_SPLITS], float nd, float fd)
 // CSM - UpdateFrustum - compute the 8 corner points of the current view frustum
 void RenderGL::CSMUpdateFrustum (frustum& f, Camera3D* cam)
 {
+  // **NOTE** The camera 'up' is NOT correct here. Must come from the camera.
+
 	// camera parameters
 	Vec3F up(0.0f, 1.0f, 0.0f);
 	Vec3F viewdir = cam->getToPos() - cam->getPos();	viewdir.Normalize();		
 	Vec3F right = viewdir.Cross ( up);					right.Normalize();
 	up = right.Cross(viewdir); up.Normalize();
 
-	f.fov = cam->getFov() / 57.2957795 + 0.1f;			// note: 57.2957795 = DEGtoRAD 
+	f.fov = cam->getFov() / 57.2957795;   //+ 0.1f;			// note: 57.2957795 = DEGtoRAD 
 	f.ratio = float(mXres) / float(mYres);
 	
 	Vec3F fc = cam->getPos() + viewdir * f.fard;
@@ -778,64 +787,53 @@ float RenderGL::CSMApplyCropMatrix(frustum& f)
 	Matrix4F split_crop;
 	Matrix4F split_mvp;
 
-
-	float maxX = -1e10f, maxY = -1e10f;
-	float minX =  1e10f, minY =  1e10f;
-	float minZ, maxZ;
-
-	// find the z-range of the current frustum as seen from the light
-	// in order to increase precision
-  Vec4F	transf = Vec4F(f.point[0]) * shad_light_mv;		// note that only the z-component is need and thus the multiplication is simplified (single point transform)
-	minZ = maxZ = transf.z;
-
+  // get AABB coordinates in light space
+  Vec3F lmin, lmax, lc;
+  lmin = Vec4F(f.point[0], 1) * shad_light_mv; 
+  lmax = lmin;
 	for (int i = 1; i < 8; i++) {				
-		transf = Vec4F(f.point[i]) * shad_light_mv;
-		if (transf.z < minZ) minZ = transf.z;
-		if (transf.z > maxZ) maxZ = transf.z;
+		lc = Vec4F(f.point[i], 1) * shad_light_mv;       // light coordinates of each corner
+		if (lc.x < lmin.x ) lmin.x = lc.x;
+    if (lc.y < lmin.y ) lmin.y = lc.y;
+    if (lc.z < lmin.z ) lmin.z = lc.z;    
+    if (lc.x > lmax.x) lmax.x = lc.x;
+    if (lc.y > lmax.y) lmax.y = lc.y;
+    if (lc.z > lmax.z) lmax.z = lc.z;
 	}
-
-  // *NOTE*
-  // work around for minZ/maxZ padding each cascade near/far to include all shadow casters
-  float zPadding = 40.0f;
-  minZ -= zPadding;
-  maxZ += zPadding;
-  if (minZ < 0.1f) minZ = 0.1f;
-
-	//minZ = 1.0;
-	//maxZ = 1000.0;
-	// here, minZ/maxZ will be the nearest/farthest camera frustum point as viewed on the lights z-axis
-
-	// make sure all relevant shadow casters are included
-	// note that these here are dummy objects at the edges of our scene
-	/*	for (int i = 0; i < NUM_OBJECTS; i++) {
-		transf = obj_BSphere[i].center * shadowMtx;
-		if (transf.z + obj_BSphere[i].radius > maxZ) maxZ = transf.z + obj_BSphere[i].radius;
-		//	if(transf.z - obj_BSphere[i].radius < minZ) minZ = transf.z - obj_BSphere[i].radius;
-	}*/
 
   // set the projection matrix with the new z-bounds note the inversion because the light looks at the neg z axis.
   // the minZ/maxZ is specific to the split, so then is shad_proj and shad_mvp
-  split_proj.makeOrtho (-1.0, 1.0, -1.0, 1.0, -maxZ, -minZ);			// gluPerspective(LIGHT_FOV, 1.0, maxZ, minZ); // for point lights
+  // split_proj.makeOrtho (-1.0, 1.0, -1.0, 1.0, -maxZ, -minZ);			// gluPerspective(LIGHT_FOV, 1.0, maxZ, minZ); // for point lights
+
+  // near/far padding
+  float zpad = 100.0f;
+  lmin.z -= zpad;
+  lmax.z += zpad;
+
+  split_proj.makeOrtho ( lmin.x, lmax.x, lmin.y, lmax.y, lmin.z, lmax.z );
+
   split_mvp = split_proj;
   split_mvp *= shad_light_mv;						// p' = proj * model * view * p     world -> light
-	
 
   // get the crop matrix:
   // find the extents of the frustum slice as projected in light's homogeneous coordinates
   // this is what the split frustum looks like in the light's 2D view plane (region of interest)
-  for (int i = 0; i < 8; i++) {
-    transf = Vec4F(f.point[i]) * split_mvp;
-    transf.x /= transf.w; 
-    transf.y /= transf.w;
-    if (transf.x < minX) minX = transf.x;
-		if (transf.x > maxX) maxX = transf.x;		
-    if (transf.y < minY) minY = transf.y;
-		if (transf.y > maxY) maxY = transf.y;		
+  Vec3F cmin, cmax;   // crop bounds
+  Vec4F mvp;  
+  mvp = Vec4F(f.point[0]) * split_mvp; mvp.x /= mvp.w; mvp.y /= mvp.w;
+  cmin = mvp;
+  cmax = mvp;
+  for (int i = 1; i < 8; i++) {
+    mvp = Vec4F(f.point[i]) * split_mvp; mvp.x /= mvp.w; mvp.y /= mvp.w;
+    if (mvp.x < cmin.x) cmin.x = mvp.x;
+		if (mvp.x > cmax.x) cmax.x = mvp.x;
+    if (mvp.y < cmin.y) cmin.y = mvp.y;
+		if (mvp.y > cmax.y) cmax.y = mvp.y;
 	}
-	float scaleX = 2.0f / (maxX - minX);
-	float scaleY = 2.0f / (maxY - minY);
-	float offsetX = -0.5f * (maxX + minX) * scaleX;
-	float offsetY = -0.5f * (maxY + minY) * scaleY;
+	float scaleX = 2.0f / (cmax.x - cmin.x);
+	float scaleY = 2.0f / (cmax.y - cmin.y);
+	float offsetX = -0.5f * (cmax.x + cmin.x) * scaleX;
+	float offsetY = -0.5f * (cmax.y + cmin.y) * scaleY;
 
 	// apply a crop matrix to modify the projection matrix we got from glOrtho.
 	split_crop.Identity();
@@ -849,8 +847,7 @@ float RenderGL::CSMApplyCropMatrix(frustum& f)
 	shad_light_proj = split_crop;
 	shad_light_proj *= split_proj;
 
-
-	return minZ;
+	return lmin.z;
 }
 
 
@@ -863,8 +860,8 @@ void RenderGL::CSMViewSplits (Camera3D* cam )
                             0.5f, 0.5f, 0.5f, 1.0f };
 	float* cam_proj = cam->getProjMatrix().GetDataF();
 	
-	Matrix4F inv;
-	inv = cam->getViewInv();
+	Matrix4F cam_viewinverse;
+	cam_viewinverse = cam->getViewInv();
 
 	// for every active split
 	for (int i = 0; i < csm_num_splits; i++) {
@@ -878,8 +875,8 @@ void RenderGL::CSMViewSplits (Camera3D* cam )
 		// to be passed to the view shader later
 		shad_vmtx[i] = Tbias;     // texture lookup. projected (-1,1) --> texture (0,1)     t = p*0.5 + 0.5
 		shad_vmtx[i] *= shad_cpm[i];		
-		shad_vmtx[i] *= inv;      // we must transform from the camera view because we need the camera z-depth value 
-                              // of the test points, otherwise we could have used their world pos
+		shad_vmtx[i] *= cam_viewinverse;  // we must transform from the camera view because we need the camera z-depth value 
+                                      // of the test points, otherwise we could have used their world pos
 
 	}
 }
@@ -928,9 +925,10 @@ void RenderGL::CSMRenderShadowMaps()
 
 	// Render the shadow maps
 	for (int i = 0; i < csm_num_splits; i++)
-	{
-		CSMUpdateFrustum (f[i], cam);							// compute the camera frustum slice boundary points in world space		
-		float minZ = CSMApplyCropMatrix(f[i]);		// adjust the view frustum of the light, so that it encloses the camera frustum slice fully.		
+	{  
+    CSMUpdateFrustum(f[i], cam);							// given the cascade splits f[i].near/far, compute the camera frustum corners in light space
+
+		float minZ = CSMApplyCropMatrix(f[i]);		// adjust shad_light_proj, view frustum of the light, so that the slice encloses the camera frustum
 		
 		glFramebufferTextureLayer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth_tex_ar, 0, i);		// make the current depth map a rendering target
 		CHECK_GL("CSM::glFramebufferTextureLayer", mbDebug);
@@ -941,7 +939,7 @@ void RenderGL::CSMRenderShadowMaps()
 		RenderByGroup (true);									// draw scene. true = shadow
 		CHECK_GL("CSM::RenderByGroup", mbDebug);
 		
-		shad_cpm[i] = shad_light_proj;							// store the product of all shadow matries for later. cpm = crop-proj-mv
+		shad_cpm[i] = shad_light_proj;					  // store the product of all shadow matries for later. cpm = crop-proj-mv
 		shad_cpm[i] *= shad_light_mv;							// Plight = crop * proj * view * model * Pworld		(world -> light)
 	}
 	CHECK_GL("CSM::ShadowMap", mbDebug);
@@ -955,7 +953,18 @@ void RenderGL::CSMRenderShadowMaps()
 	// Prepare for camera view for shadows
 	glActiveTexture (GL_TEXTURE1);									// bind to texture unit #1  (this is the value, 1, sent to shader uniform)
 	glBindTexture(GL_TEXTURE_2D_ARRAY_EXT, depth_tex_ar);			// bind shadow map textures (array of them in one GLID)
-	glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);			// see OpenGL 2.0 spec, sec 3.8, p. 188
+  
+  // Use TEX_2D_ARRAY as a glsl "sample2DArray" (returns filtered depth)
+  float border[4] = { 1.0f,1.0f,1.0f,1.0f };
+  glTexParameterfv (GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_BORDER_COLOR, border);
+  glTexParameteri (GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+  glTexParameteri (GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+  glTexParameteri (GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_COMPARE_MODE, GL_NONE); 
+
+  // Use TEX_2D_ARRAY as a glsl "sample2DArrayShadow", see OpenGL 2.0 spec, sec 3.8, p. 188
+  // glTexParameteri(GL_TEXTURE_2D_ARRAY_EXT, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 
 	CSMViewSplits (cam);								// compute the far_bound and shad_vmtx from the camera 
 
@@ -1368,21 +1377,33 @@ void RenderGL::BindShaderGlobals ( RShader* rshade )
 // Bind shadow maps
 void RenderGL::BindShaderShadowMapVars ( RShader* rshade )
 {
+  int progid = rshade->programID;
 	int id, id2;
+  
+  // shadow near/far splits
 	id = getParam(rshade, P_SFAR1); 
 	if (id != P_NULL)	{
 		id2 = getParam(rshade, P_SFAR2); 
-		glProgramUniform4fv	(rshade->programID, id , 1, &far_bound[0]);			// shadow bounds
-		glProgramUniform4fv	(rshade->programID, id2, 1, &far_bound[4]);			
+		glProgramUniform4fv	(progid, id , 1, &far_bound[0]);			// shadow bounds
+		glProgramUniform4fv	(progid, id2, 1, &far_bound[4]);			
 	}
+  // shadow light proj matrix
+  id = getParam(rshade, P_SLPROJ);
+  glProgramUniformMatrix4fv(progid, id, 1, GL_FALSE, shad_light_proj.GetDataF());
 
+  // shadow light model-view matrix
+  id = getParam(rshade, P_SLMV);
+  glProgramUniformMatrix4fv (progid, id, 1, GL_FALSE, shad_light_mv.GetDataF());  
+
+  // shadow cascade view matrices 
 	id = getParam(rshade, P_SMTX);
 	if ( id != P_NULL) {
 		for (int s=0; s < csm_num_splits; s++) 
 			glProgramUniformMatrix4fv (rshade->programID, id+s, 1, GL_FALSE, shad_vmtx[s].GetDataF() );	// shadow view matrices			
 	}
+  // shadow texture array & size
 	id = getParam(rshade, P_STEX);	if (id != P_NULL) glProgramUniform1i	(rshade->programID, id, 1);			// shadow texture unit (#1)
-	id = getParam(rshade, P_SSIZE);	if (id != P_NULL) glProgramUniform2f	(rshade->programID, id, (float)csm_depth_size, 1.0f / (float)csm_depth_size);	// shadow texture size 
+	id = getParam(rshade, P_SSIZE);	if (id != P_NULL) glProgramUniform2f	(rshade->programID, id, (float)csm_depth_size, 1.0f / (float) csm_depth_size);	// shadow texture size 
 }
 
 
@@ -1698,20 +1719,28 @@ int RenderGL::UpdateTexture ()
 }
 
 // Read a shader file into a character string
-char* RenderGL::ReadShaderSource ( std::string fname )
+char* RenderGL::ReadShaderSource ( std::string fname, long& fileSz )
 {
+  // open shader file
 	char fpath[2048];
 	strncpy ( fpath, fname.c_str(), 2048 );
 	FILE *fp = fopen( fpath, "rb" );
 	if (!fp) return NULL;
+  
+  // get file size
 	fseek( fp, 0L, SEEK_END );
-	long fileSz = ftell( fp );
+	fileSz = ftell( fp );
 	fseek( fp, 0L, SEEK_SET );
+  
+  // alloc buffer
 	char *buf = (char *) malloc( fileSz+1 );
 	if (!buf) { fclose(fp); return NULL; }
+
+  // read to buffer
 	fread( buf, 1, fileSz, fp );
 	buf[fileSz] = '\0';
 	fclose( fp );
+
 	return buf;
 }
 
@@ -1813,6 +1842,8 @@ bool RenderGL::CreateShader ( Object* obj, std::string& msg)
 	AddParam(rid, P_PARAMS+3,	"param3");		
 	AddParam(rid, P_SFAR1,		"shadowFars1");
 	AddParam(rid, P_SFAR2,		"shadowFars2");
+  AddParam(rid, P_SLPROJ,   "shadowLgtProj");
+  AddParam(rid, P_SLMV,     "shadowLgtMV" );
 	AddParam(rid, P_SMTX,		  "shadowMtx");
 	AddParam(rid, P_STEX,		  "shadowTex");
 	AddParam(rid, P_SSIZE,		"shadowSize");
@@ -1840,6 +1871,7 @@ bool RenderGL::LoadShader (std::string filename, GLuint& program )
 {
 	int statusOK;
 	int maxLog = 65536, lenLog;
+  long fsz;
 	char log[65536];
 	char fname[1024], fpath[1024];
 	std::string fragpath, vertpath, geompath;
@@ -1861,7 +1893,7 @@ bool RenderGL::LoadShader (std::string filename, GLuint& program )
 	if (!hasVert) { dbgprintf ("  OpenGL. ERROR: Unable to find vertex program %s\n", vertfile.c_str());	return false; }
 
 	// Read vertex program	
-	char *vertSource = ReadShaderSource(vertpath.c_str());
+	char *vertSource = ReadShaderSource(vertpath.c_str(), fsz);
 	if (!vertSource) { dbgprintf ("  OpenGL. ERROR: Unable to read source '%s'\n", vertfile.c_str());  return false; }
 	GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vShader, 1, (const GLchar**)&vertSource, NULL);
@@ -1879,14 +1911,43 @@ bool RenderGL::LoadShader (std::string filename, GLuint& program )
 	}
 
 	// Read fragment program
-	char *fragSource = ReadShaderSource(fragpath);
+	char *fragSource = ReadShaderSource(fragpath, fsz);
 	if (!fragSource) {
 		dbgprintf("  OpenGL. ERROR: Unable to read source '%s'\n", fragfile.c_str());
 		exit(-1);
 		return false;
 	}
+  // handle shader #include (glsl does not)
+  std::string src = fragSource;
+  size_t posL = src.find("#include");
+  if ( posL != std::string::npos) {
+  
+    // get include file
+    size_t posR = src.find("\n", posL+1);      
+    std::string inclfile = strParseOutDelim (src.substr(posL, posR - posL), "\"", "\"" );
+    std::string inclpath;
+    bool hasIncl = getFileLocation(inclfile, inclpath);
+
+    if (hasIncl) {
+      // read include file
+      free(fragSource);
+      char* inclSource = ReadShaderSource ( inclpath, fsz);
+      fragSource = (char*) malloc ( src.length() + fsz );
+
+      // append shader (before include)
+      posL--;
+      memcpy ( fragSource, src.c_str(), posL );
+      // append include
+      memcpy ( fragSource + posL, inclSource, fsz );
+      // append shader (after include)
+      memcpy ( fragSource + posL + fsz, src.substr(posR+1).c_str(), src.length()-posR );
+      
+    }    
+  }
+  
+
 	GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fShader, 1, (const GLchar**)&fragSource, NULL);
+	glShaderSource(fShader, 1, (const GLchar**) &fragSource, NULL);
 	glCompileShader(fShader);
 	glGetShaderiv(fShader, GL_COMPILE_STATUS, &statusOK);
 	free(fragSource);
@@ -1902,7 +1963,7 @@ bool RenderGL::LoadShader (std::string filename, GLuint& program )
 	char *geomSource = 0x0;
 	GLuint gShader;
 	if (hasGeom) {
-		geomSource = ReadShaderSource(geompath);
+		geomSource = ReadShaderSource(geompath, fsz);
 		if (!geomSource) { dbgprintf("  OpenGL. ERROR: Unable to read source '%s'\n", geomfile.c_str()); return false; }
 		gShader = glCreateShader(GL_GEOMETRY_SHADER);
 		glShaderSource(gShader, 1, (const GLchar**)&geomSource, NULL);

@@ -25,7 +25,7 @@ using namespace glib;
 #include <stack>
 #include <vector>
 
-#ifdef USE_WIDGETS
+#ifdef BUILD_WIDGETS
 	#include "widget.h"
 #endif
 

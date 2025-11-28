@@ -12,7 +12,7 @@
 // limitations under the License.
 //--------------------------
 
-#ifdef USE_OPTIX
+#ifdef BUILD_OPTIX
 
 //#define WGL_NV_gpu_affinity
 #include "render_optix.h" 
@@ -28,7 +28,7 @@
 #include "volume.h"
 #include "timex.h"
 
-#ifdef USE_GVDB
+#ifdef BUILD_GVDB
 	#include "gvdb.h"
 #endif
 
@@ -159,7 +159,7 @@ bool RenderOptiX::CreateVolume (Object* obj)
 {
 	Volume* vol = dynamic_cast<Volume*>( obj );
 
-	#ifdef USE_GVDB
+	#ifdef BUILD_GVDB
 		VolumeGVDB* gvdb = vol->getGVDB();
 
 		int shading =	vol->mRenderShade;		// desired shading
@@ -472,7 +472,7 @@ void RenderOptiX::StartRender ()
 	Scene* scn = getRenderMgr()->getScene ();
 
 	// Update volumes
-	#ifdef USE_GVDB
+	#ifdef BUILD_GVDB
 		if ( mVDB >= 0 ) {
 			// Find *the* volume asset 
 			//  (optix_scene only supports one right now)

@@ -40,9 +40,11 @@
 	#define P_ENVCLR		15
 	#define P_SFAR1			16
 	#define P_SFAR2			17
-	#define P_SMTX			18
-	#define P_STEX			19
-	#define P_SSIZE			20
+  #define P_SLPROJ    18
+  #define P_SLMV      19
+	#define P_SMTX			20
+	#define P_STEX			21
+	#define P_SSIZE			22
 
 	struct RTexture {
 		int				assetID;
@@ -145,7 +147,7 @@
 		bool	CreateShader ( Object* ast, std::string& msg );					// Shaders
 		bool	LoadShader( std::string fname, GLuint& program );
 		int		LoadInternalShader ( std::string fname );
-		char*	ReadShaderSource ( std::string fname );
+		char*	ReadShaderSource ( std::string fname, long& fsize );
 		bool	AddParam ( int shader_id, int param_id, char* name );
 		bool	AddParamBlock ( int shader_id, int param_id, char* name );
 		int		getParam( RShader* sh, int param_id );

@@ -16,7 +16,7 @@
 	#define DEF_VOLUME_H
 
 	#include "object.h"
-	#ifdef USE_GVDB	
+	#ifdef BUILD_GVDB	
 		#include "gvdb.h"
 	#endif
 
@@ -25,7 +25,7 @@
 	class Volume : public Object {
 	public:
 		Volume () { 
-			#ifdef USE_GVDB
+			#ifdef BUILD_GVDB
 				gvdb = 0x0; 
 			#endif	
 		}
@@ -39,12 +39,12 @@
 		void SetTransferFunc ();
 		void Render (Camera3D* cam, LightSet* lset, int w, int h, int out_tex, int depth_tex=-1);
 
-		#ifdef USE_GVDB
+		#ifdef BUILD_GVDB
 			VolumeGVDB* getGVDB() {return gvdb;}
 		#endif	
 	
 	public:
-		#ifdef USE_GVDB
+		#ifdef BUILD_GVDB
 			VolumeGVDB*		gvdb;
 		#endif
 

@@ -18,7 +18,7 @@
   input: texture = leather_color
   input: displace = leather_disp
   param: displace_amt, <1.0, 0.002, 0.002>
-  param: displace_depth, <0.01, 0.05, 0.05>
+  param: displace_depth, <0.01, 0.08, 0.08>
   param: diff_color, <0.8, 0.8, 0.8>
   param: spec_color, <0.7, 0.7, 0.7>
   param: env_color, <0.3, 0.3, 0.3>
@@ -56,7 +56,7 @@
   param: max_samples, 48
   param: backclr, <.1, .1, .15, 0>
   param: ray_depths, <1,0,1,1>  
-  param: edit_res, <1400, 1400, 0>
+  param: edit_res, <1200, 800, 0>
   param: record_res, <2048, 2048, 0> 
   param: record, 0
 
@@ -67,7 +67,7 @@
   param: nearfar, <1,1000,0>
   param: distdolly, <28.7495,1,0>
   param: angs, <-212.905,7.5704,0>
-  param: from, <50, 50, 80>
+  param: from, <40, 50, 60>
   param: to, <0, 0, 0>
   param: dof, <35,35,15>
   param: key, 0, <0,10,0>, <0,10,12>, <0,0,0>, <0.18,35,8>

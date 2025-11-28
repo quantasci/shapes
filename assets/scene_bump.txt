@@ -13,6 +13,16 @@
   param: light_width, 32.0
   param: spec_power, 2
 
+[MATERIAL] MineralMtl0
+  input: shader = shade_mesh
+  input: texture = rocks_color   
+  param: diff_color, <0.7, 0.7, 0.7>
+  param: spec_color, <0.6, 0.7, 0.8>
+  param: env_color, <0.1, 0.1, 0.1>
+  param: refl_color, <0, 0, 0>  
+  param: refl_width, 2.0
+  param: spec_power, 400
+
 [MATERIAL] MineralMtl1
   input: shader = shade_bump
   input: texture = rocks_color
@@ -37,7 +47,7 @@
   param: env_color, <0.1, 0.1, 0.1>
   param: refl_color, <0.4, 0.4, 0.4>  
   param: refl_width, 2.0
-  param: spec_power, 150
+  param: spec_power, 200
 
 [MATERIAL] MineralMtl3
   input: shader = shade_bump
@@ -50,50 +60,55 @@
   param: env_color, <0.2, 0.2, 0.2>
   param: refl_color, <0.2, 0.2, 0.2>  
   param: refl_width, 2.0
-  param: spec_power, 200
+  param: spec_power, 80
 
 [MATERIAL] MineralMtl4
   input: shader = shade_bump
   input: texture = rocks_color
   input: displace = rocks_bump
   param: displace_amt, <1.0, 0.002, 0.002>
-  param: displace_depth, <0.01, 0.10, 0.10>  
+  param: displace_depth, <0.04, 0.12, 0.12>  
   param: diff_color, <0.7, 0.7, 0.7>
-  param: spec_color, <0.4, 0.4, 0.4>
+  param: spec_color, <1.4, 1.4, 1.4>
   param: env_color, <0.3, 0.3, 0.3>
   param: refl_color, <0.1, 0.1, 0.1>  
   param: refl_width, 2.0
-  param: spec_power, 300
+  param: spec_power, 100
 
 #----------------------------------------------- Objects
 
 [MESH] Mineral1
   input: material = MineralMtl1
   input: mesh = model_sphere
-  xform: <6, 12, 0>, <1.9, 1.9, 1.9>
+  xform: <6, 22, 0>, <2, 2, 2>
 
 [MESH] Mineral2
   input: material = MineralMtl2
   input: mesh = model_sphere
-  xform: <2, 12, 0>, <1.9, 1.9, 1.9>
+  xform: <2, 22, 0>, <2, 2, 2>
 
 [MESH] Mineral3
   input: material = MineralMtl3
   input: mesh = model_sphere
-  xform: <-2, 12, 0>, <1.9, 1.9, 1.9>
+  xform: <-2, 22, 0>, <2, 2, 2>
 
 [MESH] Mineral4
   input: material = MineralMtl4
   input: mesh = model_sphere
-  xform: <-6, 12, 0>, <1.9, 1.9, 1.9>
+  xform: <-6, 22, 0>, <2, 2, 2>
 
 
-#----------------------------------- Ground plane
+#----------------------------------- 
+
+[MESH] Plane 
+  input: mesh = model_square
+  input: material = Basic
+  xform: <0,0,0>, <100,1,100>
 
 [MESH] Table
   input: mesh = model_cube
-  input: material = Basic
-  xform: <0,0,0>, <10,10,10>
+  input: material = MineralMtl0
+  xform: <0,10,0>, <10,10,10>
 
 [GLOBALS] Globals  
   param: fps, 30
@@ -104,24 +119,24 @@
   param: max_samples, 48
   param: backclr, <.1, .1, .15, 0>
   param: ray_depths, <1,0,1,1>  
-  param: edit_res, <1400, 1400, 0>
+  param: edit_res, <1200, 800, 0>
   param: record_res, <2048, 2048, 0> 
   param: record, 0
 
 [CAMERA] Camera
   visible: true
   pos: <0.000,0.000,0.000>
-  param: fov, 30
+  param: fov, 40
   param: nearfar, <.1,1000,0>
   param: distdolly, <24, 1, 0>  
-  param: from, <15, 30, 20>
-  param: to, <0, 11, 0>
+  param: from, <35, 50, 40>
+  param: to, <0, 10, 0>
   param: dof, <35,35,15>  
 
 [LIGHTS] Lightset
   visible: true
   pos: <0.000,0.000,0.000>
-  param: light, <604.5,1200,-629.667>, <0,0,0>, <0.01,0.01,0.01>, <1.7,1.7,1.7>, <0,0,0>
-  param: light[1], <0,1000,800>, <0,0,0>, <0,0,0>, <0.7,0.7,0.8>, <0,0,0>
-  param: light[2], <-2000,250,0>, <0,0,0>, <0,0,0>, <0.4,0.3,0.2>, <0,0,0>
+  param: light, <300,500,-200>, <0,0,0>, <0,0,0>, <1.2,1.2,1.2>, <0,0,0>
+  param: light[1], <0,300,800>, <0,0,0>, <0,0,0>, <0.6,0.2,0.1>, <0,0,0>
+  param: light[2], <500,250,0>, <0,0,0>, <0,0,0>, <0.1,0.2,0.5>, <0,0,0>
 

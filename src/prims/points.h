@@ -162,7 +162,7 @@
 		DataX					m_Accel;				// Acceleration buffers
 		FParams_t				m_Params;				// Fluid parameters (should be made DataX in future)
 
-		#ifdef USE_CUDA
+		#ifdef BUILD_CUDA
 		CUmodule				m_Module;			// CUDA Kernels
 		CUfunction				m_Func[ FUNC_MAX ];		
 		CUdeviceptr				m_cuParams;

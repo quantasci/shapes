@@ -26,34 +26,47 @@
   param: light_width, 1.0
   param: spec_power, 100
 
+[MATERIAL] Leather
+  input: shader = shade_bump
+  input: texture = leather_color
+  input: displace = leather_disp
+  param: displace_amt, <1.0, 0.002, 0.002>
+  param: displace_depth, <0.01, 0.10, 0.10>
+  param: diff_color, <0.5, 0.5, 0.5>
+  param: spec_color, <0.8, 0.8, 0.8>
+  param: env_color, <0.4, 0.4, 0.4>
+  param: refl_color, <0.1, 0.1, 0.1>  
+  param: refl_width, 2.0
+  param: spec_power, 50
+
 
 #----------------------------------------------- Objects
 
 [MESH] Plane 
   input: mesh = model_square
   input: material = Basic
-  xform: <0,-10,0>, <100,1,100>
+  xform: <0,0,0>, <100,1,100>
 
 [MESH] Cube
   input: mesh = model_cube
-  input: material = Mirror
-  xform: <-12,0,0>, <10,10,10>
+  input: material = Leather
+  xform: <0,10,0>, <10,10,10>
 
 [MESH] Sphere
   input: mesh = model_sphere
   input: material = Mirror
-  xform: <12,0,0>, <10,10,10>
+  xform: <0,24,0>, <4,4,4>
 
 [GLOBALS] Globals  
   param: fps, 30
   param: rate, 1.0
   param: frames, <0, 100, 10>  
-  param: envclr, <1,1,1,1>    
+  param: envclr, <.7,.7,.7,1>    
   input: envmap = env_sky  
   param: max_samples, 48
   param: backclr, <.1, .1, .15, 0>
   param: ray_depths, <1,0,1,1>  
-  param: edit_res, <1028, 1028, 0>
+  param: edit_res, <1400, 1400, 0>
   param: record_res, <2048, 2048, 0> 
   param: record, 0
 
@@ -61,16 +74,15 @@
   visible: true
   pos: <0.000,0.000,0.000>
   param: fov, 40
-  param: nearfar, <1,1000,0>
-  param: distdolly, <28.7495,1,0>
-  param: angs, <-212.905,7.5704,0>
-  param: from, <50, 50, 80>
-  param: to, <0, 0, 0>
-  param: dof, <35,35,15>
-  param: key, 0, <0,10,0>, <0,10,12>, <0,0,0>, <0.18,35,8>
+  param: nearfar, <.1,1000,0>
+  param: distdolly, <10, 1, 0>  
+  param: from, <55, 40, 55>
+  param: to, <0, 6, 0>
+  param: dof, <35,35,15>  
 
 [LIGHTS] Lightset
   visible: true
   pos: <0.000,0.000,0.000>
-  param: light, <604.5,1200,-629.667>, <0,0,0>, <0.01,0.01,0.01>, <1.7,1.7,1.7>, <0,0,0>  
+  param: light[0], <304.5,800,-400.0>, <0,0,0>, <0.01,0.01,0.01>, <1.7,1.7,1.7>, <0,0,0>  
+  param: light[1], <100,100,500.0>, <0,0,0>, <0,0,0>, <1.7,0.4,0.2>, <0,0,0>  
 

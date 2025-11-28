@@ -22,7 +22,7 @@ using namespace glib;
 
 void Volume::Initialize (int w, int h)
 {
-	#ifdef USE_GVDB
+	#ifdef BUILD_GVDB
 		gvdb = new VolumeGVDB;
 		gvdb->SetVerbose ( true );
 		gvdb->SetCudaDevice ( GVDB_DEV_CURRENT );		// Use OptiX context already created
@@ -50,7 +50,7 @@ void Volume::Initialize (int w, int h)
 
 void Volume::SetTransferFunc ()
 {
-	#ifdef USE_GVDB
+	#ifdef BUILD_GVDB
 
 		gvdb->SetEpsilon( 0.001, 256 );
 		gvdb->getScene()->SetSteps ( 0.2f, 16, 0.2f );			// SCN_PSTEP, SCN_SSTEP, SCN_FSTEP - Raycasting steps
@@ -69,7 +69,7 @@ void Volume::SetTransferFunc ()
 
 void Volume::Render (Camera3D* cam, LightSet* lset, int w, int h, int out_tex, int depth_tex)
 {
-	#ifdef USE_GVDB
+	#ifdef BUILD_GVDB
 		if ( mRX != w || mRY != h ) {
 			mRX = w; mRY = h;
 			gvdb->ResizeRenderBuf ( 0, w, h, 4 );	
@@ -89,7 +89,7 @@ void Volume::Render (Camera3D* cam, LightSet* lset, int w, int h, int out_tex, i
 
 void Volume::Sketch3D (int w, int h, Camera3D* cam)
 {
-	#ifdef USE_GVDB
+	#ifdef BUILD_GVDB
 		Matrix4F xform;
 		GVDBNode* node;
 		Vec3F bmin, bmax;

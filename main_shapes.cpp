@@ -20,13 +20,9 @@ using namespace glib;
 #include "lightset.h"
 #include "image.h"
 
-#ifdef USE_WIDGETS
-	#include "widget.h"
-#endif
-
-#ifdef USE_CUDA
+#ifdef BUILD_CUDA
 	#include "common_cuda.h"
-	#ifdef USE_OPTIX
+	#ifdef BUILD_OPTIX
 		#include "optix_scene.h"
 	#endif
 #endif
@@ -92,19 +88,15 @@ public:
 
 	RenderGL*			m_RendGL;
 
-	#ifdef USE_OPTIX
+	#ifdef BUILD_OPTIX
 		RenderOptiX*	m_RendOptiX;
 		OptixScene		mOptix;	
 	#endif
-	#ifdef USE_PORTAUDIO
+	#ifdef BUILD_PORTAUDIO
 		SoundMgr		mSoundMgr;
 	#endif
 	bool				mbSoundOn;	
 
-	#ifdef USE_WIDGETS
-		Widgets		mInterface;
-	#endif
-  
 	float		mAng;
 
 };
@@ -175,7 +167,7 @@ bool Sample::init ()
   bool gpu_perf = PROFILE;
   PERF_INIT ( 64, cpu_perf, gpu_perf, true, 0, "" );		// cpu, gpu, cons
 
-	#ifdef USE_CUDA
+	#ifdef BUILD_CUDA
 		// Start CUDA	
 		dbgprintf("Starting CUDA.\n");
 		CUdevice dev; 
@@ -204,7 +196,7 @@ bool Sample::init ()
 	setTextSz ( 16, 1 );		
 	start_guis ( w, h );
 
-	#ifdef USE_OPTIX
+	#ifdef BUILD_OPTIX
 		mOptix.InitializeOptix ( w, h );	
 	#endif
 
@@ -233,7 +225,7 @@ bool Sample::init ()
 	m_RendGL->SetDebug ( DEBUG_GL );
 	mRenderMgr.AddRenderer ( m_RendGL, m_rendergl_tex );
 
-	#ifdef USE_OPTIX
+	#ifdef BUILD_OPTIX
 		createTexGL(m_renderoptix_tex, w, h);
 		m_RendOptiX = new RenderOptiX;
 		m_RendOptiX->SetOptix ( &mOptix );	
@@ -480,16 +472,16 @@ void Sample::display ()
 		sprintf ( msg, "%4.2f ms (%4.2f fps)", m_tave/m_tcnt, 1000.0/(m_tave/m_tcnt) );
 		drawText ( Vec2F(10,10), msg, Vec4F(1,1,1,1) );
 		
-	end2D(); 
-	
-	// CSM debugging - draw cascade maps
-	/* int csm_tex = mRenderMgr.getGL()->getCSMTex();
-	renderTexArrayGL(0, 0, 200, 200, csm_tex, 0);		
-	renderTexArrayGL(300, 0, 500, 200, csm_tex, 1);
-	renderTexArrayGL(600, 0, 800, 200, csm_tex, 2);
-	renderTexArrayGL(900, 0,1100, 200, csm_tex, 3);  */
+	end2D();  
 	
 	drawAll ();
+
+  // CSM debugging - draw cascade maps
+  /* int csm_tex = mRenderMgr.getGL()->getCSMTex();
+  renderTexArrayGL(0, 0, 200, 200, csm_tex, 0);
+  renderTexArrayGL(300, 0, 500, 200, csm_tex, 1);
+  renderTexArrayGL(600, 0, 800, 200, csm_tex, 2);
+  renderTexArrayGL(900, 0, 1100, 200, csm_tex, 3); */
 
 	appPostRedisplay();				// refresh display
 }
@@ -569,8 +561,8 @@ void Sample::MoveCamera ( char how, Vec3F amt )
 				/* Quaternion q, t;
 				q.fromAngleAxis( amt.x, Vec3F(0, 0, 1));
 				t.fromAngleAxis( amt.y, Vec3F(1, 0, 1)); */
-				lgt->pos.x += -amt.x * 50.0;
-				lgt->pos.z += -amt.y * 50.0;
+				lgt->pos.x += -amt.x * 200.0;
+				lgt->pos.z += -amt.y * 200.0;
 				mRenderMgr.UpdateLights();
 			}
 			lgts->Update();		// update lights
@@ -774,7 +766,7 @@ void Sample::startup ()
 		_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_LEAK_CHECK_DF);
 	#endif
 
-	appStart ( "Shapes (c) 2010-2025", "Shapes (c) 2010-2025", w, h, 4, 2, 8, DEBUG_GL );
+	appStart ( "Shapes (c) 2010-2025", "Shapes (c) 2010-2025", w, h, 4, 2, 16, DEBUG_GL );
 
 	printf ("SHAPES (c) Quanta Sciences 2010-2025\n");
 	printf ("by Rama C. Hoetzlein, ramakarl.com\n");
